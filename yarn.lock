@@ -275,6 +275,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@maskobalo/client@workspace:packages/client":
+  version: 0.0.0-use.local
+  resolution: "@maskobalo/client@workspace:packages/client"
+  dependencies:
+    "@maskobalo/common": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@maskobalo/common@workspace:*, @maskobalo/common@workspace:packages/common":
+  version: 0.0.0-use.local
+  resolution: "@maskobalo/common@workspace:packages/common"
+  languageName: unknown
+  linkType: soft
+
+"@maskobalo/server@workspace:packages/server":
+  version: 0.0.0-use.local
+  resolution: "@maskobalo/server@workspace:packages/server"
+  dependencies:
+    "@maskobalo/common": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"

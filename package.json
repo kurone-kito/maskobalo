@@ -46,5 +46,10 @@
     "node": "^17.2.0",
     "yarn": "^2.4.3"
   },
-  "packageManager": "yarn@3.1.1"
+  "packageManager": "yarn@3.1.1",
+  "workspaces": {
+    "packages": [
+      "./packages/*"
+    ]
+  }
 }

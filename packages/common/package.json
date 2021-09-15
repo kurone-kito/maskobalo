@@ -1,0 +1,25 @@
+{
+  "name": "@maskobalo/common",
+  "version": "0.1.0",
+  "description": "Maskobalo common package",
+  "keywords": [],
+  "homepage": "https://github.com/kurone-kito/maskobalo#readme",
+  "bugs": "https://github.com/kurone-kito/maskobalo/issues",
+  "license": "MIT",
+  "author": "kurone-kito <krone@kit.black> (https://kit.black/)",
+  "private": true,
+  "files": [],
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kurone-kito/maskobalo.git",
+    "directory": "packages/common"
+  },
+  "engines": {
+    "node": "^17.2.0",
+    "yarn": "^2.4.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -294,3 +294,4 @@ tsconfig.json
 # yarn v2
 .yarn/
 yarn.lock
+*.pro

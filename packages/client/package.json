@@ -1,0 +1,27 @@
+{
+  "name": "@maskobalo/client",
+  "version": "0.1.0",
+  "description": "Maskobalo client",
+  "keywords": [],
+  "homepage": "https://github.com/kurone-kito/maskobalo#readme",
+  "bugs": "https://github.com/kurone-kito/maskobalo/issues",
+  "license": "MIT",
+  "author": "kurone-kito <krone@kit.black> (https://kit.black/)",
+  "private": true,
+  "files": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kurone-kito/maskobalo.git",
+    "directory": "packages/client"
+  },
+  "dependencies": {
+    "@maskobalo/common": "workspace:*"
+  },
+  "engines": {
+    "node": "^17.2.0",
+    "yarn": "^2.4.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

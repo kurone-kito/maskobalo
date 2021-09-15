@@ -2,6 +2,19 @@
 
 ## 開発者向けドキュメント
 
+### 構成
+
+- `/`: ルートプロジェクト `maskobalo`。Monorepo の管理や Linter など、
+  プロジェクト全体を跨いだ一括管理の責務を負います。
+- `/packages/client`: クライアント サイド プロジェクト `@maskobalo/client`。
+  Web フロントエンド コンテンツにおける、ビルド、プレビュー、
+  および配置などの責務を負います。
+- `/packages/server`: サーバー サイド プロジェクト `@maskobalo/server`。
+  バックエンド側の API を提供する、サーバーのロジックなどをビルド、
+  および配置する責務を負います。
+- `/packages/common`: 共通ライブラリ プロジェクト `@maskobalo/common`。
+  クライアントとサーバー双方で使用する機能などを提供する責務を負います。
+
 ### システム要件
 
 Node.js v17.2.0 以降の動作する PC (Linux, macOS, Windows)
