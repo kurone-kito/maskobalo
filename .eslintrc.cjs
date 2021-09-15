@@ -32,7 +32,7 @@ module.exports = {
   parserOptions: {
     ecmaFeatures: { impliedStrict: true },
     extraFileExtensions: ['.cjs', '.cts', '.mjs', '.mts', '.json'],
-    project: ['./tsconfig.json'],
+    project: ['./tsconfig.eslint.json', './packages/*/tsconfig.json'],
     sourceType: 'module',
     tsconfigRootDir: __dirname,
   },
@@ -43,6 +43,12 @@ module.exports = {
     // するために、ビルド時における Tree Shaking を正しく機能させる必要が
     // あるが、型インポート構文の積極的な活用は、これに大きく貢献できる。
     '@typescript-eslint/consistent-type-imports': 'warn',
+    // クラスメンバーにおける、ブラケット表記を許可する。既定では全面禁止。
+    // 本来 tsconfig.json における、noPropertyAccessFromIndexSignature 設定
+    // に従い、適切な設定がされるべきであるが、Monorepo 環境ではなぜか
+    // 機能せず、やむを得ず暫定的に無効化している。そのため、
+    // ! TODO: この設定は仮設のもので、問題が解決出来次第削除する。
+    '@typescript-eslint/dot-notation': 'off',
     // 特定のファイルを除き、devDependencies に対する依存は禁止。
     // 既定では全面禁止。内部的に Bundler により Tree Shaking されるため、
     // 厳格な依存パッケージの分離を行う必要性は薄いが、整理しやすくする

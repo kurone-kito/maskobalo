@@ -290,6 +290,7 @@ package.json
 
 # TypeScript
 tsconfig.json
+tsconfig.*.json
 
 # yarn v2
 .yarn/

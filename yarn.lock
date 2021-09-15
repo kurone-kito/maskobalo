@@ -280,12 +280,15 @@ __metadata:
   resolution: "@maskobalo/client@workspace:packages/client"
   dependencies:
     "@maskobalo/common": "workspace:*"
+    typescript: ~4.4.4
   languageName: unknown
   linkType: soft
 
 "@maskobalo/common@workspace:*, @maskobalo/common@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@maskobalo/common@workspace:packages/common"
+  dependencies:
+    typescript: ~4.4.4
   languageName: unknown
   linkType: soft
 
@@ -294,6 +297,7 @@ __metadata:
   resolution: "@maskobalo/server@workspace:packages/server"
   dependencies:
     "@maskobalo/common": "workspace:*"
+    typescript: ~4.4.4
   languageName: unknown
   linkType: soft
 
