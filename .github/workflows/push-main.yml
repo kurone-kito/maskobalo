@@ -1,0 +1,12 @@
+name: メイン ブランチを push した際のアクション
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: ソースコードのビルド
+    runs-on: ubuntu-latest
+    steps:
+      - name: チェックアウトします。
+        uses: actions/checkout@v2
