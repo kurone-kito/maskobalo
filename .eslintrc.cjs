@@ -6,15 +6,21 @@ module.exports = {
     'plugin:jsdoc/recommended',
     'plugin:lodash/recommended',
     'eslint:recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/eslint-recommended',
     // 極力 Airbnb ルールを適用したいため、末尾に近づけて配置する
-    'airbnb-typescript/base',
+    'airbnb-typescript',
     'plugin:prettier/recommended',
   ],
   overrides: [
+    {
+      files: ['packages/client/*/*.[jt]s', 'packages/client/*/*.[jt]sx'],
+      env: { browser: true },
+    },
     {
       files: ['*.?(c)js'],
       rules: {
@@ -72,6 +78,14 @@ module.exports = {
     // 既定では全面禁止。現代のモダンブラウザ事情では、
     // 関数仕様における差異は考えにくいものと考えている。
     'lodash/prefer-lodash-method': 'off',
+    // prop-types の記述省略を許可する。既定は禁止。トランスパイル済み
+    // コンポーネントを TypeScript ではないプロジェクトから再利用する
+    // ようなシチュエーションでは必須だが、そのような状況は考えにくい。
+    'react/prop-types': 'off',
+    // React 17 から、JSX/TSX における `React` のインポートは不要となり、
+    // 併せてこのルールも不要となった。既定は JSX/TSX において強制。
+    // See: https://ja.reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html#eslint
+    'react/react-in-jsx-scope': 'off',
     // import 構文の複数 export における、順序の任意
     // 並び替えを警告付きで許可する。既定は無条件許可。
     // import 部の雪だるま式肥大化問題対処のため。
@@ -81,5 +95,8 @@ module.exports = {
   // にいれていないと、Linter がいくつか不可解なエラーを出す。
   // また、`node: {}` を設定に含めても、別の不可解なエラーを出す。
   // see: https://github.com/airbnb/javascript/issues/1730
-  settings: { 'import/resolver': { typescript: { alwaysTryTypes: true } } },
+  settings: {
+    'import/resolver': { typescript: { alwaysTryTypes: true } },
+    react: { version: 'detect' },
+  },
 };

@@ -23,9 +23,12 @@
     "start": ""
   },
   "dependencies": {
-    "@maskobalo/common": "workspace:*"
+    "@maskobalo/common": "workspace:*",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
   },
   "devDependencies": {
+    "@types/react": "^17.0.37",
     "rimraf": "^3.0.2",
     "typescript": "~4.4.4"
   },
