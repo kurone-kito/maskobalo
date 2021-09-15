@@ -11,7 +11,11 @@
   "private": true,
   "files": [],
   "repository": "github:kurone-kito/maskobalo",
+  "scripts": {
+    "postinstall": "husky install"
+  },
   "devDependencies": {
+    "husky": "^7.0.4",
     "typescript": "~4.4.4"
   },
   "engines": {
