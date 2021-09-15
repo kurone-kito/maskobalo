@@ -16,3 +16,10 @@ npm install --global yarn@berry
 ```sh
 yarn install
 ```
+
+### その他ルール
+
+- コミット時におけるコミット メッセージの Linter を導入しています。
+  ルールとして暫定的に
+  **[Conventional Commits](https://www.conventionalcommits.org/ja/)**
+  を適用しており、規約に反するメッセージのコミットを弾きます。
