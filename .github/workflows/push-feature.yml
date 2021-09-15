@@ -8,6 +8,12 @@ jobs:
   build:
     name: ソースコードの検証
     runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: "17"
     steps:
       - name: チェックアウトします。
         uses: actions/checkout@v2
+      - name: Node.js バージョン ${{ env.NODE_VERSION }} を使用します。
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
