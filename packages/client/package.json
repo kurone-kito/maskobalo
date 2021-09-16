@@ -19,11 +19,15 @@
     "directory": "packages/client"
   },
   "scripts": {
-    "build": "next build && next export -o dist",
-    "clean": "rimraf \".next\" \"dist\" \"*.tgz\"",
+    "build": "concurrently -m 1 \"yarn:build:storybook\" \"yarn:build:next\"",
+    "build:next": "next build && next export -o dist",
+    "build:storybook": "build-storybook --modern -o public/storybook",
+    "clean": "rimraf \".next\" \"dist\" \"public/storybook\" \"*.tgz\"",
     "prepack": "yarn run clean && yarn run build",
     "serve": "serve dist",
-    "start": "next dev"
+    "start": "concurrently \"yarn:watch:*\"",
+    "watch:next": "next dev",
+    "watch:storybook": "start-storybook -p 6006 --ci --modern"
   },
   "dependencies": {
     "@maskobalo/common": "workspace:*",
@@ -32,10 +36,22 @@
     "react-dom": "^17.0.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@mdx-js/react": "^1.6.22",
+    "@storybook/addon-docs": "^6.4.9",
+    "@storybook/addon-essentials": "^6.4.9",
+    "@storybook/builder-webpack5": "^6.4.9",
+    "@storybook/core-common": "^6.4.9",
+    "@storybook/manager-webpack5": "^6.4.9",
+    "@storybook/react": "^6.4.9",
     "@types/node": "^16.11.12",
     "@types/react": "^17.0.37",
+    "concurrently": "^6.4.0",
     "rimraf": "^3.0.2",
-    "typescript": "~4.4.4"
+    "serve": "^13.0.2",
+    "storybook-addon-turbo-build": "^1.0.1",
+    "typescript": "~4.4.4",
+    "webpack": "^5.65.0"
   },
   "engines": {
     "node": "^17.2.0",

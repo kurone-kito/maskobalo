@@ -53,6 +53,15 @@ yarn run build:re
 
 上記コマンドで、クリーンアップとビルドを一括実行、所謂リビルドを行います。
 
+また、ビルド結果をブラウザで表示する場合、下記のコマンドを実行した上で、
+[**`3000` ポート**](http://localhost:3000) をブラウザで表示します。
+
+```sh
+yarn run serve
+```
+
+簡易サーバーを停止するには、_`Ctrl` + `c`_ を押下します。
+
 ### ホットコード プッシュ環境を作成する (開発用)
 
 ```sh
@@ -66,6 +75,7 @@ yarn start
 準備が整ったら、以下の URL を開いてください。
 
 - [`http://localhost:3000`](http://localhost:3000): Web ページのプレビュー
+- [`http://localhost:6006`](http://localhost:6006): [Storybook](https://storybook.js.org)
 
 ### Linting
 
