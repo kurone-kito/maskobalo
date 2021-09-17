@@ -1,5 +1,6 @@
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
+import { helloWorld } from '@maskobalo/common';
 
 /**
  * Hello world ページ。
@@ -7,7 +8,7 @@ import { useRouter } from 'next/router';
  * @returns ページのレンダリング結果。
  */
 const Page: NextPage = () => (
-  <>{useRouter().isFallback ? 'Loading...' : 'Hello, world!'}</>
+  <>{useRouter().isFallback ? 'Loading...' : helloWorld}</>
 );
 Page.displayName = 'Index';
 
