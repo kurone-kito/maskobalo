@@ -20,3 +20,8 @@ jobs:
         run: yarn install
       - name: プロジェクトのビルドをします。
         run: yarn run build
+      - name: フロントエンドのビルド結果を、GitHub Pages に配置します。
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./packages/client/dist
