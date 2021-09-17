@@ -7196,6 +7196,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv-cli@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "dotenv-cli@npm:4.1.1"
+  dependencies:
+    cross-spawn: ^7.0.1
+    dotenv: ^8.1.0
+    dotenv-expand: ^5.1.0
+    minimist: ^1.1.3
+  bin:
+    dotenv: cli.js
+  checksum: 7c2e88e6a5990471de0fb14d79bdf90d588cc6732be10d5435f3e75d1733d1e21f9603810da313ef726b12bd0b5acd106a02f7a70f418fba288406d1187311ca
+  languageName: node
+  linkType: hard
+
 "dotenv-expand@npm:^5.1.0":
   version: 5.1.0
   resolution: "dotenv-expand@npm:5.1.0"
@@ -7203,7 +7217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:^8.0.0":
+"dotenv@npm:^8.0.0, dotenv@npm:^8.1.0":
   version: 8.6.0
   resolution: "dotenv@npm:8.6.0"
   checksum: 38e902c80b0666ab59e9310a3d24ed237029a7ce34d976796349765ac96b8d769f6df19090f1f471b77a25ca391971efde8a1ea63bb83111bd8bec8e5cc9b2cd
@@ -11382,6 +11396,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.6.0
     "@typescript-eslint/parser": ^5.6.0
     concurrently: ^6.4.0
+    dotenv-cli: ^4.1.1
     eslint: ^8.4.1
     eslint-config-airbnb-typescript: ^16.1.0
     eslint-config-prettier: ^8.3.0
@@ -11763,7 +11778,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimist@npm:^1.1.1, minimist@npm:^1.2.0, minimist@npm:^1.2.5":
+"minimist@npm:^1.1.1, minimist@npm:^1.1.3, minimist@npm:^1.2.0, minimist@npm:^1.2.5":
   version: 1.2.5
   resolution: "minimist@npm:1.2.5"
   checksum: 86706ce5b36c16bfc35c5fe3dbb01d5acdc9a22f2b6cc810b6680656a1d2c0e44a0159c9a3ba51fb072bb5c203e49e10b51dcd0eec39c481f4c42086719bae52

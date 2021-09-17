@@ -12,7 +12,7 @@
   "files": [],
   "repository": "github:kurone-kito/maskobalo",
   "scripts": {
-    "build": "yarn run sub --topological-dev -t run build",
+    "build": "dotenv -c staging -- yarn run sub --topological-dev -t run build",
     "build:re": "yarn run clean && yarn run build",
     "clean": "concurrently \"yarn:clean:*\"",
     "clean:root": "rimraf \".eslintcache\" \"*.tgz\" \"*.tsbuildinfo\"",
@@ -20,10 +20,10 @@
     "lint": "eslint --cache --format codeframe \"$@\" \"./**/*\"",
     "lint:fix": "yarn run lint --fix",
     "pack": "yarn run sub --topological-dev -t pack",
-    "postinstall": "husky install",
+    "postinstall": "dotenv -c staging husky install",
     "prepack": "yarn run pack",
     "serve": "yarn workspace @maskobalo/client run serve",
-    "start": "yarn workspace @maskobalo/common run build && yarn run sub -j 3 run start",
+    "start": "dotenv -c development -- yarn workspace @maskobalo/common run build && yarn run sub -j 3 run start",
     "sub": "yarn workspaces foreach --exclude \"maskobalo\" -ipv \"$@\""
   },
   "devDependencies": {
@@ -33,6 +33,7 @@
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
     "concurrently": "^6.4.0",
+    "dotenv-cli": "^4.1.1",
     "eslint": "^8.4.1",
     "eslint-config-airbnb-typescript": "^16.1.0",
     "eslint-config-prettier": "^8.3.0",

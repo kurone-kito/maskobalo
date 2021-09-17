@@ -1,6 +1,11 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
-# Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
+# Created by https://www.toptal.com/developers/gitignore/api/dotenv,linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
+# Edit at https://www.toptal.com/developers/gitignore?templates=dotenv,linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
+
+### dotenv ###
+.env
+.env.local
+.env.*.local
 
 ### Linux ###
 *~
@@ -119,7 +124,6 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
 .env.test
 .env.production
 
@@ -293,4 +297,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
+# End of https://www.toptal.com/developers/gitignore/api/dotenv,linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
