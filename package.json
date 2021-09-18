@@ -23,6 +23,8 @@
     "postinstall": "dotenv -c staging husky install",
     "prepack": "yarn run pack",
     "serve": "yarn workspace @maskobalo/client run serve",
+    "server:login": "yarn workspace @maskobalo/server run login",
+    "server:logout": "yarn workspace @maskobalo/server run logout",
     "start": "dotenv -c development -- yarn workspace @maskobalo/common run build && yarn run sub -j 3 run start",
     "sub": "yarn workspaces foreach --exclude \"maskobalo\" -ipv \"$@\""
   },

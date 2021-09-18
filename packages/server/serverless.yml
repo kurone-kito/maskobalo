@@ -1,0 +1,23 @@
+app: maskobalo
+custom:
+  serverless-offline:
+    noPrependStageInUrl: true
+    httpPort: 4000
+functions:
+  hello:
+    events:
+      - http:
+          method: get
+          path: /hello
+    handler: src/api.hello
+package:
+  exclude:
+    - node_modules/**
+plugins:
+  - serverless-offline
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs14.x
+  stage: dev
+service: maskobalo

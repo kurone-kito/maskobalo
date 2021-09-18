@@ -1,11 +1,6 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/dotenv,linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
-# Edit at https://www.toptal.com/developers/gitignore?templates=dotenv,linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
-
-### dotenv ###
-.env
-.env.local
-.env.*.local
+# Created by https://www.toptal.com/developers/gitignore/api/vim,node,react,linux,macos,windows,serverless,storybookjs,sublimetext,visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=vim,node,react,linux,macos,windows,serverless,storybookjs,sublimetext,visualstudiocode
 
 ### Linux ###
 *~
@@ -193,6 +188,10 @@ psd
 thumb
 sketch
 
+### Serverless ###
+# Ignore build directory
+.serverless
+
 ### StorybookJs ###
 # gitignore template for the Storybook, UI guide for front apps
 # website: https://storybook.js.org/
@@ -297,4 +296,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/dotenv,linux,macos,node,react,storybookjs,sublimetext,vim,visualstudiocode,windows
+# End of https://www.toptal.com/developers/gitignore/api/vim,node,react,linux,macos,windows,serverless,storybookjs,sublimetext,visualstudiocode

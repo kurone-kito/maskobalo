@@ -20,14 +20,20 @@
   "scripts": {
     "build": "",
     "clean": "rimraf \"dist\" \"*.tgz\"",
+    "login": "serverless login",
+    "logout": "serverless logout",
     "prepack": "yarn run clean && yarn run build",
-    "start": ""
+    "start": "serverless offline start"
   },
   "dependencies": {
-    "@maskobalo/common": "workspace:*"
+    "@maskobalo/common": "workspace:*",
+    "aws-lambda": "^1.0.7"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.87",
     "rimraf": "^3.0.2",
+    "serverless": "^2.68.0",
+    "serverless-offline": "^8.3.1",
     "typescript": "~4.4.4"
   },
   "engines": {
