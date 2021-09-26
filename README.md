@@ -1,2 +1,1 @@
-# maskobalo
-🖐😑🤚
+# 🎭 codename: Maskobalo
