@@ -1,3 +1,19 @@
 {
+  "name": "maskobalo",
+  "version": "0.1.0",
+  "description": "codename: Maskobalo",
+  "keywords": [],
+  "homepage": "https://github.com/kurone-kito/maskobalo#readme",
+  "bugs": "https://github.com/kurone-kito/maskobalo/issues",
+  "license": "MIT",
+  "author": "kurone-kito <krone@kit.black> (https://kit.black/)",
+  "type": "module",
+  "private": true,
+  "files": [],
+  "repository": "github:kurone-kito/maskobalo",
+  "engines": {
+    "node": "^17.2.0",
+    "yarn": "^2.4.3"
+  },
   "packageManager": "yarn@3.1.1"
 }
