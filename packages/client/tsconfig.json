@@ -4,10 +4,11 @@
     "checkJs": true,
     "lib": ["DOM", "ESNext"],
     "jsx": "preserve",
+    "module": "commonjs",
     "noEmit": true,
     "skipLibCheck": true
   },
   "extends": "../../tsconfig.json",
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "out"]
 }

@@ -9,25 +9,30 @@
   "author": "kurone-kito <krone@kit.black> (https://kit.black/)",
   "private": true,
   "files": [
+    ".next",
     "dist"
   ],
+  "main": "./dist/index.html",
   "repository": {
     "type": "git",
     "url": "https://github.com/kurone-kito/maskobalo.git",
     "directory": "packages/client"
   },
   "scripts": {
-    "build": "",
-    "clean": "rimraf \"dist\" \"*.tgz\"",
+    "build": "next build && next export -o dist",
+    "clean": "rimraf \".next\" \"dist\" \"*.tgz\"",
     "prepack": "yarn run clean && yarn run build",
-    "start": ""
+    "serve": "serve dist",
+    "start": "next dev"
   },
   "dependencies": {
     "@maskobalo/common": "workspace:*",
+    "next": "12.0.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
   "devDependencies": {
+    "@types/node": "^16.11.12",
     "@types/react": "^17.0.37",
     "rimraf": "^3.0.2",
     "typescript": "~4.4.4"
