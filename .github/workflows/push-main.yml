@@ -15,4 +15,5 @@ jobs:
       - name: Node.js バージョン ${{ env.NODE_VERSION }} を使用します。
         uses: actions/setup-node@v2
         with:
+          cache: yarn
           node-version: ${{ env.NODE_VERSION }}
