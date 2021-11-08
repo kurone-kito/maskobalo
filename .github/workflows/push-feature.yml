@@ -2,14 +2,14 @@ name: フィーチャー ブランチを push した際のアクション
 on:
   push:
     branches:
-      - "*"
-      - "!main"
+      - '*'
+      - '!main'
 jobs:
   build:
     name: ソースコードの検証
     runs-on: ubuntu-latest
     env:
-      NODE_VERSION: "17"
+      NODE_VERSION: '17'
     steps:
       - name: チェックアウトします。
         uses: actions/checkout@v2
@@ -20,3 +20,5 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: プロジェクトの依存関係を解決します。
         run: yarn install
+      - name: ソースコードの構文検証をします。
+        run: yarn run lint:fix

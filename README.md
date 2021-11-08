@@ -17,6 +17,21 @@ npm install --global yarn@berry
 yarn install
 ```
 
+### Linting
+
+コミット時に、自動的にソースコードの整形を行います。また、
+下記コマンドを実行することで随時コミット対象ファイルの整形ができます。
+
+```sh
+yarn run lint:fix
+```
+
+自動整形をせず、手動で修正したい場合は、下記の npm-scripts を使用します。
+
+```sh
+yarn run lint
+```
+
 ### その他ルール
 
 - コミット時におけるコミット メッセージの Linter を導入しています。

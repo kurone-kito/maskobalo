@@ -1,0 +1,8 @@
+endOfLine: lf
+overrides:
+  - files:
+      - .yarnrc.yml
+      - yarn.lock
+    options:
+      singleQuote: false
+singleQuote: true
