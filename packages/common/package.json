@@ -11,6 +11,9 @@
   "files": [
     "dist"
   ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "repository": {
     "type": "git",
@@ -18,13 +21,21 @@
     "directory": "packages/common"
   },
   "scripts": {
-    "build": "",
-    "clean": "rimraf \"dist\" \"*.tgz\"",
+    "build": "concurrently \"yarn:build:*\"",
+    "build:es": "node esbuild.config.mjs",
+    "build:ts": "tsc",
+    "clean": "rimraf \"dist\" \"*.tgz\" \"*.tsbuildinfo\"",
     "prepack": "yarn run clean && yarn run build",
-    "start": ""
+    "start": "concurrently \"yarn:watch:*\"",
+    "watch:es": "cross-env WATCH=true yarn run build:es",
+    "watch:ts": "tsc --watch"
   },
   "devDependencies": {
+    "concurrently": "^6.4.0",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.14.3",
     "rimraf": "^3.0.2",
+    "type-fest": "^2.8.0",
     "typescript": "~4.4.4"
   },
   "engines": {
