@@ -12,9 +12,18 @@
   "files": [],
   "repository": "github:kurone-kito/maskobalo",
   "scripts": {
+    "build": "yarn run sub --topological-dev -t run build",
+    "build:re": "yarn run clean && yarn run build",
+    "clean": "concurrently \"yarn:clean:*\"",
+    "clean:root": "rimraf \".eslintcache\" \"*.tgz\" \"*.tsbuildinfo\"",
+    "clean:sub": "yarn run sub run clean",
     "lint": "eslint --cache --format codeframe \"$@\" \"./**/*\"",
     "lint:fix": "yarn run lint --fix",
-    "postinstall": "husky install"
+    "pack": "yarn run sub --topological-dev -t pack",
+    "postinstall": "husky install",
+    "prepack": "yarn run pack",
+    "start": "yarn workspace @maskobalo/common run build && yarn run sub -j 3 run start",
+    "sub": "yarn workspaces foreach --exclude \"maskobalo\" -ipv \"$@\""
   },
   "devDependencies": {
     "@commitlint/cli": "^15.0.0",
@@ -22,6 +31,7 @@
     "@types/eslint": "^8.2.1",
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
+    "concurrently": "^6.4.0",
     "eslint": "^8.4.1",
     "eslint-config-airbnb-typescript": "^16.1.0",
     "eslint-config-prettier": "^8.3.0",
@@ -39,6 +49,7 @@
     "husky": "^7.0.4",
     "prettier": "^2.5.1",
     "pretty-quick": "^3.1.2",
+    "rimraf": "^3.0.2",
     "typescript": "~4.4.4",
     "typescript-eslint-language-service": "^5.0.0"
   },

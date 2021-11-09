@@ -8,14 +8,23 @@
   "license": "MIT",
   "author": "kurone-kito <krone@kit.black> (https://kit.black/)",
   "private": true,
-  "files": [],
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/kurone-kito/maskobalo.git",
     "directory": "packages/common"
   },
+  "scripts": {
+    "build": "",
+    "clean": "rimraf \"dist\" \"*.tgz\"",
+    "prepack": "yarn run clean && yarn run build",
+    "start": ""
+  },
   "devDependencies": {
+    "rimraf": "^3.0.2",
     "typescript": "~4.4.4"
   },
   "engines": {

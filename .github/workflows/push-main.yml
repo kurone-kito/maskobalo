@@ -18,3 +18,5 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: プロジェクトの依存関係を解決します。
         run: yarn install
+      - name: プロジェクトのビルドをします。
+        run: yarn run build

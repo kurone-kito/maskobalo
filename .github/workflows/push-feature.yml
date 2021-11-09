@@ -22,3 +22,5 @@ jobs:
         run: yarn install
       - name: ソースコードの構文検証をします。
         run: yarn run lint:fix
+      - name: プロジェクトのビルドをします。
+        run: yarn run build
