@@ -11,6 +11,9 @@
   "private": true,
   "files": [],
   "repository": "github:kurone-kito/maskobalo",
+  "devDependencies": {
+    "typescript": "~4.4.4"
+  },
   "engines": {
     "node": "^17.2.0",
     "yarn": "^2.4.3"
