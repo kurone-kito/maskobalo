@@ -1,0 +1,20 @@
+extends: '@kurone-kito/markdownlint-config'
+# Allow non-aligned table columns — IDD scaffold tables (in
+# docs/onboarding/ and .github/instructions/) contain long cells whose
+# alignment is impractical to maintain without breaking readability.
+table-column-style: false
+# Allow limit breakthroughs in code blocks, headings, and table rows.
+# The IDD scaffold relies on these relaxations for the phase docs.
+line-length:
+  code_blocks: false
+  headings: false
+  tables: false
+# IDD docs frequently re-use the same subsection title in sibling phases;
+# the `siblings_only` flag is unreliable so disable it project-wide.
+no-duplicate-heading: false
+# Allow inline HTML for the details/summary elements used by IDD docs to
+# fold long examples.
+no-inline-html:
+  allowed_elements:
+    - details
+    - summary
