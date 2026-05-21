@@ -117,48 +117,13 @@ human-readable note (see `idd-review-snapshot.instructions.md`).
 For the full PATH A / PATH B classification of review items and their
 handling rules, see `idd-review-triage.instructions.md`.
 
-## Project commands
-
-When a phase refers to a named command set, run the corresponding
-commands. **Adapt this section when applying this workflow to a
-different project.**
-
-If `.github/idd/config.json` exists and validates against the canonical
-schema at
-<https://kurone-kito.github.io/idd-skill/schemas/policy.schema.json>, its `commands`
-object overrides the table below. Policy fields such as
-`skipIssueAuthorApprovalGate` and `maintainerApprovalActorPolicy` are
-the recorded machine-readable policy. Absent values keep the gate
-enabled and default approval actors to
-`owners-and-maintainers-only`.
-
-| Name                    | Commands                                                                                                                                     |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **fix-validate**        | `npx dprint fmt "**/*.md" && npx markdownlint-cli2 --fix "**/*.md" && npx markdownlint-cli2 "**/*.md"`                                       |
-| **pre-push-validate**   | `npx dprint check "**/*.md" && npx markdownlint-cli2 "**/*.md" && npx cspell lint "**" --no-progress`                                        |
-| **post-fix-validate**   | `npx dprint fmt "**/*.md" && npx markdownlint-cli2 --fix "**/*.md" && npx markdownlint-cli2 "**/*.md" && npx cspell lint "**" --no-progress` |
-| **install-deps**        | `true`                                                                                                                                       |
-| **issue-scope**         | `roadmap`                                                                                                                                    |
-| **orphan-first-policy** | `none`                                                                                                                                       |
-
-Non-shell rows such as **issue-scope** and **orphan-first-policy** are
-workflow settings. Read them literally, not as commands.
-
-`pre-push-validate` omits auto-fix. If lint fails, run
-**fix-validate**, commit, then re-run **pre-push-validate**.
-
-If **fix-validate** or **post-fix-validate** changes files, stage and
-commit them before any push, rebase, or step that requires a clean
-tree.
-
-`install-deps` must be idempotent. Re-running it in fresh, reused, or
-recreated worktrees must not require manual cleanup and should not leave
-unexpected tracked changes.
-
-**Tool availability**: run commands only when tools exist. For Node.js:
-prefer project scripts; use `npx <tool>` only when `npx` is available
-and no relevant script exists; else use `true`. For other tools, use
-`true` when absent.
+<!-- The upstream idd-skill template carries a "Project commands" table
+here as a maintainer reference. For maskobalo the authoritative table
+lives in `idd-overview.instructions.md` (and is mirrored in
+`.github/idd/config.json`); duplicating it here would create drift, so
+the duplicate has been removed. To inspect or change the command set,
+edit `idd-overview.instructions.md` and `.github/idd/config.json`
+together. -->
 
 ## Critique pass
 
