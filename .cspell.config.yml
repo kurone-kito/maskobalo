@@ -1,0 +1,27 @@
+cache:
+  cacheFormat: universal
+  cacheLocation: node_modules/.cache/cspell/.cspell.cache
+  cacheStrategy: metadata
+  useCache: true
+import:
+  - '@kurone-kito/cspell-config'
+version: '0.2'
+words:
+  # Project / domain
+  - maskobalo
+  - trpg
+  # IDD scaffold owners and acronym
+  - idd
+  - kito
+  - kurone
+  # Tools referenced in IDD onboarding docs (Python toolchain examples)
+  - isort
+  - pylint
+  - pytest
+  - pyproject
+  # Valid English not in default dictionary
+  - unpushed
+  - unreplied
+  - waivable
+  # Filesystem flag referenced in IDD scaffold (Linux esync)
+  - Esync

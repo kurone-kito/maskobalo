@@ -1,0 +1,26 @@
+{
+  "$schema": "https://kurone-kito.github.io/idd-skill/schemas/policy.schema.json",
+  "iddVersion": "0.1.0",
+  "markerPrefix": "maskobalo",
+  "mergePolicy": "fully_autonomous_merge",
+  "reviewPolicy": "copilot-advisory",
+  "threadResolutionPolicy": "fast-agent-resolve",
+  "claimTiming": {
+    "staleAge": "PT24H",
+    "heartbeatInterval": "PT12H"
+  },
+  "trustedMarkerActors": ["kurone-kito"],
+  "commands": {
+    "install-deps": "corepack enable && pnpm install",
+    "fix-validate": "pnpm run lint:fix",
+    "pre-push-validate": "pnpm run lint && pnpm run typecheck && pnpm run test",
+    "post-fix-validate": "pnpm run lint"
+  },
+  "helperRuntime": {
+    "profile": "instructions-only"
+  },
+  "issueScope": "orphan-first",
+  "orphanFirstPolicy": "none",
+  "skipIssueAuthorApprovalGate": true,
+  "maintainerApprovalActorPolicy": "owners-and-maintainers-only"
+}
