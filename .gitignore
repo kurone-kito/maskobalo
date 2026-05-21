@@ -145,9 +145,11 @@ dist
 
 # Gatsby files
 .cache/
-# Comment in the public line in if your project uses Gatsby and not Next.js
-# https://nextjs.org/blog/next-9-1#public-directory-support
-public
+# Note: the Gatsby/Next.js template here historically also ignored a
+# top-level `public` directory. maskobalo uses Solid + Vite, where
+# `packages/web/public/` holds source-controlled static assets, so the
+# `public` ignore rule has been removed to avoid hiding committed
+# files anywhere in the workspace.
 
 # vuepress build output
 .vuepress/dist
