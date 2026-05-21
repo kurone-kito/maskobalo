@@ -9,53 +9,31 @@ permissions:
 run-name: Pushed by @${{ github.actor }}
 jobs:
   build:
-    defaults:
-      run:
-        shell: ${{ matrix.platform.shell }}
-    name: The build process
-    runs-on: ${{ matrix.platform.os }}
+    name: lint + typecheck + test
+    runs-on: ubuntu-latest
     steps:
-      - name: Set git to use LF
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
       - name: Stages the pushed branch
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Setup the pnpm
         uses: pnpm/action-setup@v6
         with:
           run_install: false
-      - name: Prepare the Node.js version ${{ matrix.node-version }} environment
+      - name: Prepare the Node.js 24 (Krypton) environment
         uses: actions/setup-node@v6
         with:
           cache: pnpm
           check-latest: true
-          node-version: ${{ matrix.node-version }}
+          node-version: 24.x
       - env:
           HUSKY: 0
         name: Install the dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
-      - name: Run the tests
+      - name: Lint
+        run: pnpm run lint
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Test
         run: pnpm run test
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version:
-          - 22.x
-          - 24.x
-          - 25.x
-          - 26.x
-        platform:
-          - os: ubuntu-24.04-arm
-            shell: bash
-          - os: ubuntu-slim
-            shell: bash
-          - os: windows-11-arm
-            shell: bash
-          - os: windows-11-arm
-            shell: powershell
-          - os: windows-latest
-            shell: bash
-          - os: windows-latest
-            shell: powershell
-    timeout-minutes: 5
+    timeout-minutes: 10

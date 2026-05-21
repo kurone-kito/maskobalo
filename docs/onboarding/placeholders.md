@@ -2,6 +2,9 @@
 
 Use this reference with `idd-template/ONBOARDING.md` when you need the
 full derivation and replacement rules for the template placeholders.
+For maskobalo, the resolved values are already applied; this page is
+kept as historical context so future maintainers can see how each
+template placeholder was sourced.
 
 This page is the detailed companion for:
 
@@ -14,12 +17,12 @@ This page is the detailed companion for:
 Before asking the operator to type values manually, inspect the target
 repository and propose candidate values for the placeholders below.
 
-### `maskobalo`
+### Repository name (resolved to `maskobalo`)
 
 Read the repository short name from the git remote or GitHub API. The
 remote name is the most reliable source.
 
-### `maskobalo`
+### Project marker prefix (resolved to `maskobalo`)
 
 Start from the repository name, lowercase it, and normalize it into a
 short hyphenated marker prefix. The final value must match:
@@ -30,7 +33,7 @@ short hyphenated marker prefix. The final value must match:
 
 That means 2-32 characters, lowercase, starting with a letter.
 
-### `kurone-kito`
+### Trusted marker actor (resolved to `kurone-kito`)
 
 List the GitHub logins allowed to post trusted IDD markers in
 `.github/idd/config.json`. This placeholder is intentionally singular:
@@ -50,7 +53,7 @@ trusted claim, release, watermark, baseline, and advisory markers for
 the target repository. Keep the value aligned with any helper
 invocations that pass `--trusted-marker-logins`.
 
-### `corepack enable && pnpm install`
+### Install-deps command (resolved to `corepack enable && pnpm install`)
 
 Look for the target repository's dependency tooling and propose the
 matching install command:
@@ -72,7 +75,7 @@ matching install command:
 If both `pyproject.toml` and `requirements.txt` are present, confirm
 which workflow should drive the IDD command rows.
 
-### `pnpm run lint:fix`
+### Fix-validate command (resolved to `pnpm run lint:fix`)
 
 Propose an auto-fix plus validate sequence that matches the existing
 tooling. Common patterns:
@@ -86,7 +89,7 @@ tooling. Common patterns:
 - Rust: `cargo fmt`
 - no relevant auto-fix tooling: `true`
 
-### `pnpm run lint && pnpm run typecheck && pnpm run test`
+### Pre-push validate command (resolved to `pnpm run lint && pnpm run typecheck && pnpm run test`)
 
 Propose a non-mutating lint/build/test sequence. Common patterns:
 
@@ -99,7 +102,7 @@ Propose a non-mutating lint/build/test sequence. Common patterns:
 - Rust: `cargo check && cargo test`
 - no relevant verification command: `true`
 
-### `pnpm run lint`
+### Post-fix validate command (resolved to `pnpm run lint`)
 
 Usually a superset of `fix-validate` and `pre-push-validate`.
 
@@ -115,34 +118,34 @@ For the full fallback order and policy matrix, see
 ## Final placeholder meanings
 
 After Step 1A and Step 1C, you should have final values for these seven
-placeholders:
+placeholders. The "Resolved value" column shows the value adopted by
+maskobalo.
 
-| Placeholder                      | Meaning                                                   | Example                            |
-| -------------------------------- | --------------------------------------------------------- | ---------------------------------- |
-| `maskobalo`                  | Repository short name used in worktree examples           | `my-app`                           |
-| `maskobalo`      | Hidden issue-body marker prefix                           | `my-app`                           |
-| `kurone-kito`       | Single JSON-escaped login allowed to post trusted markers | `trusted-user-a`                   |
-| `pnpm run lint:fix`      | Auto-fix plus validate command row                        | `npm run lint:fix && npm run lint` |
-| `pnpm run lint && pnpm run typecheck && pnpm run test` | Non-mutating verify command row                           | `npm run lint && npm run test`     |
-| `pnpm run lint` | Post-fix validate command row                             | `npm run lint:fix && npm test`     |
-| `corepack enable && pnpm install`       | Dependency install command, or `true` when unnecessary    | `npm install`                      |
+| Placeholder name           | Meaning                                                   | Resolved value (maskobalo)                              |
+| -------------------------- | --------------------------------------------------------- | ------------------------------------------------------- |
+| Repository name            | Repository short name used in worktree examples           | `maskobalo`                                             |
+| Project marker prefix      | Hidden issue-body marker prefix                           | `maskobalo`                                             |
+| Trusted marker actor       | Single JSON-escaped login allowed to post trusted markers | `kurone-kito`                                           |
+| Fix-validate command       | Auto-fix plus validate command row                        | `pnpm run lint:fix`                                     |
+| Pre-push validate command  | Non-mutating verify command row                           | `pnpm run lint && pnpm run typecheck && pnpm run test`  |
+| Post-fix validate command  | Post-fix validate command row                             | `pnpm run lint`                                         |
+| Install-deps command       | Dependency install command, or `true` when unnecessary    | `corepack enable && pnpm install`                       |
 
 ### No-op substitution
 
 Only the command placeholders may be set to `true` when a step does not
 apply to the target project. For example:
 
-- no dependency install step →
-  `corepack enable && pnpm install = true`
-- no relevant auto-fix command →
-  `pnpm run lint:fix = true`
+- no dependency install step → `install-deps = true`
+- no relevant auto-fix command → `fix-validate = true`
 
-Keep `corepack enable && pnpm install` safe to rerun across retries, takeovers,
+Keep the `install-deps` command safe to rerun across retries, takeovers,
 and recreated worktrees.
 
 ## Marker prefix notes
 
-`maskobalo` appears in two hidden issue-body markers:
+The repository marker prefix `maskobalo` appears in two hidden
+issue-body markers:
 
 - roadmap identity marker:
   `<!-- maskobalo-roadmap-id: {unique-id} -->`
@@ -168,5 +171,5 @@ task list as `- [ ] #NNN` entries.
 ## Replacement pass
 
 After copying the template files into the target repository, replace the
-seven placeholders above globally. Then verify that no `{{...}}` strings
+seven placeholders globally. Then verify that no `{{...}}` strings
 remain in the copied files.
