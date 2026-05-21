@@ -49,7 +49,7 @@ pnpm run dev         # 各パッケージの dev サーバを並列起動 (パ�
 maskobalo/
 ├── .github/
 │   ├── idd/config.json                 # マシン可読 IDD ポリシー
-│   ├── instructions/idd-*.md           # IDD フェーズ指示
+│   ├── instructions/idd-*.instructions.md  # IDD フェーズ指示
 │   ├── copilot-instructions.md         # canonical AI エージェントガイド
 │   └── workflows/                      # CI ワークフロー
 ├── docs/                               # IDD ドキュメント + プロジェクトドキュメント

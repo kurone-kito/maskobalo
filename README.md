@@ -49,7 +49,7 @@ pnpm run dev         # parallel dev servers (once packages exist)
 maskobalo/
 ├── .github/
 │   ├── idd/config.json                 # machine-readable IDD policy
-│   ├── instructions/idd-*.md           # IDD phase instructions
+│   ├── instructions/idd-*.instructions.md  # IDD phase instructions
 │   ├── copilot-instructions.md         # canonical AI agent guide
 │   └── workflows/                      # CI workflows
 ├── docs/                               # IDD docs + project docs

@@ -277,7 +277,6 @@ maskobalo:
   to the written instructions path. Wire the helpers in a follow-up
   issue and switch this back to `package-manager` in the same change.
 - `threadResolutionPolicy: fast-agent-resolve`
-- `helperRuntime.profile: package-manager`
 - `skipIssueAuthorApprovalGate: true`
 - `maintainerApprovalActorPolicy: owners-and-maintainers-only`
 - `markerPrefix: maskobalo`
