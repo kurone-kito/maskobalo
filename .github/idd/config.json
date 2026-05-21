@@ -17,7 +17,7 @@
     "post-fix-validate": "pnpm run lint"
   },
   "helperRuntime": {
-    "profile": "package-manager"
+    "profile": "instructions-only"
   },
   "issueScope": "orphan-first",
   "orphanFirstPolicy": "none",

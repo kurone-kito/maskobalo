@@ -269,6 +269,13 @@ maskobalo:
   are surfaced on every PR and counted as advisory input alongside
   CodeRabbit. No-advisory and human-required profiles remain available
   in `profiles/` if the project later changes course.
+- `helperRuntime.profile: instructions-only` — the
+  `package-manager` helper bundle from
+  [`kurone-kito/idd-skill`](https://github.com/kurone-kito/idd-skill)
+  (`scripts/*.mjs` + matching `idd:*` package scripts) is **not yet
+  wired** in this repo. While it is missing, IDD phase docs fall back
+  to the written instructions path. Wire the helpers in a follow-up
+  issue and switch this back to `package-manager` in the same change.
 - `threadResolutionPolicy: fast-agent-resolve`
 - `helperRuntime.profile: package-manager`
 - `skipIssueAuthorApprovalGate: true`
