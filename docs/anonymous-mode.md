@@ -90,7 +90,7 @@ Speech API.
 - **STT**: `SpeechRecognition` / `webkitSpeechRecognition`. Continuous
   recognition runs while the speaker holds a push-to-talk key (or is
   in voice-activated mode); the resulting transcript is sent over the
-  DataChannel as a `tts-utterance` message.
+  client ↔ Durable Object WebSocket as a `tts-utterance` message.
 - **TTS**: `speechSynthesis` + `SpeechSynthesisUtterance`. The
   receiving client uses the speaker's currently assigned `ttsVoiceId`
   (from the latest `identity-shuffle` or `chameleon-fired` message) to
@@ -286,21 +286,44 @@ When a chameleon fires, the server emits two distinct messages:
 1. A `chameleon-fired` carrying the new identity, **scoped to the GM
    and the grantee only** (see §7 routing).
 2. A fresh `identity-shuffle` broadcast to every connected member so
-   non-grantees just see the identities list update without learning
-   that a chameleon happened. The grant / fire / expire events are
-   never visible to non-grantees, which is what makes §6.2's
-   misdirection real rather than aspirational.
+   non-grantees see the identities list update without receiving the
+   explicit chameleon-* event metadata (the `grantId`, the `member`
+   that fired, the `firesAt` schedule). The chameleon-granted /
+   chameleon-fired / chameleon-expired events themselves never reach
+   non-grantees.
+
+**Inferability limit (worth being explicit about)**: §3 declares
+chameleon as the only mid-window identity reshuffle path, so the
+*fact*
+that a chameleon fired is still inferable from the mid-window
+`identity-shuffle` by anyone paying attention, and in a small group
+the changed-row vs unchanged-rows comparison narrows the targeted
+member by process of elimination. The misdirection §6.2 promises is
+therefore "no explicit chameleon event reaches non-grantees" rather
+than "non-grantees cannot tell that a chameleon happened." True
+indistinguishability would require shuffling all members on every
+chameleon (so the changed-row signal is buried in noise) — that is
+deliberately out of scope for the MVP; see §9.
 
 *Rationale*: tying expiry to the anonymous-mode lifecycle keeps the
 state machine compact — there is no separate "charge expiration"
 logic to maintain, and no orphaned grants survive a mode flip. The
 two-message fire (scoped `chameleon-fired` + broadcast
-`identity-shuffle`) keeps non-grantees inside the misdirection while
-still updating their displayed identities.
+`identity-shuffle`) gives non-grantees the new identities while
+denying them the chameleon-event metadata, which is the best the
+protocol can do without the full-table-shuffle noise option.
 
 ## 7. Protocol
 
-Most DataChannel messages emitted by the Durable Object are broadcast
+All authoritative session messages between the client and the server
+flow over the **WebSocket** that each client opens to the Durable
+Object (a Cloudflare Workers + Durable Objects standard). The
+RTCDataChannel transport stays reserved for the direct peer-to-peer
+audio path that runs while anonymous mode is **off** (per the
+wizard's WebRTC-mesh decision); none of the message shapes below are
+sent over RTCDataChannel.
+
+Most WebSocket messages emitted by the Durable Object are broadcast
 to every connected member; a small set is **scoped** to specific
 recipients to preserve the chameleon misdirection surface (§6.2). The
 routing table after the message-shape block below names which is
@@ -454,6 +477,10 @@ tracked as separate follow-up issues:
   or the anonymous-mode lifecycle can end it.
 - GM dashboard of the current real-to-masked mapping — useful but
   separate UX work; not blocking the MVP.
+- Full-table identity reshuffle on every chameleon (the "noise"
+  option that would prevent non-grantees from inferring chameleon
+  fires by changed-row comparison). MVP accepts the inferability
+  limit documented in §6.10 in exchange for protocol simplicity.
 
 ## 10. Decision log
 
