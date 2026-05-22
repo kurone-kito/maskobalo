@@ -226,7 +226,7 @@ anonymous-mode shuffle.
 The optional `voiceAdjust: { pitch: number; rate: number }` field on
 `identity-shuffle.identities[]` and `chameleon-fired.newIdentity`
 carries this when set; if absent, the receiver uses the voice
-catalogue defaults.
+catalog defaults.
 
 *Rationale*: rather than refusing to chameleon when the voice pool
 is exhausted, the fallback degrades audibly but keeps the feature
