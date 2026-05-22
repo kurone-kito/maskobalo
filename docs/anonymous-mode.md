@@ -100,8 +100,10 @@ The random-voice pool is a small allowlist of
 `speechSynthesis.getVoices()` entries empirically confirmed to exist
 on Windows / macOS / ChromeOS. The list is committed to source (one
 place: `packages/web/src/tts/voice-pool.ts` once that package exists)
-so every client computes the same shuffle output given the same
-`shuffleId` seed.
+so every client maps the same `ttsVoiceId` (issued by the Durable
+Object inside the `identity-shuffle` payload) to the same audible
+voice. The shuffle assignment itself is performed by the Durable
+Object — clients never roll their own `ttsVoiceId`.
 
 **Practical browser support is Chromium-first** (Chrome / Edge /
 Chromium derivatives). Safari is degraded (Web Speech API behind a
@@ -319,9 +321,10 @@ All authoritative session messages between the client and the server
 flow over the **WebSocket** that each client opens to the Durable
 Object (a Cloudflare Workers + Durable Objects standard). The
 RTCDataChannel transport stays reserved for the direct peer-to-peer
-audio path that runs while anonymous mode is **off** (per the
-wizard's WebRTC-mesh decision); none of the message shapes below are
-sent over RTCDataChannel.
+audio path between members while anonymous mode is **off**: members
+exchange live audio in a WebRTC mesh and the Durable Object only
+relays signalling (offer / answer / ICE) for that path. None of the
+ServerMessage / ClientMessage shapes below ride RTCDataChannel.
 
 Most WebSocket messages emitted by the Durable Object are broadcast
 to every connected member; a small set is **scoped** to specific
