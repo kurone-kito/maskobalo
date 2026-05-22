@@ -292,7 +292,7 @@ type ServerMessage =
       identities: Array<{
         memberId: string;
         maskedName: string;
-        color: string;
+        maskedColor: string;
         ttsVoiceId: string;
         voiceAdjust?: { pitch: number; rate: number }; // pool-exhaustion fallback
       }>;
@@ -311,7 +311,7 @@ type ServerMessage =
       member: string;
       newIdentity: {
         maskedName: string;
-        color: string;
+        maskedColor: string;
         ttsVoiceId: string;
         voiceAdjust?: { pitch: number; rate: number };
       };
@@ -361,7 +361,7 @@ interface RoomState {
   anonymousMode: {
     active: boolean;
     gmExempt: boolean; // decided at session creation, immutable
-    transition?: { targetActive: boolean; startsAt: number };
+    transition?: { targetActive: boolean; transitionStartAt: number };
     currentShuffle?: {
       shuffleId: string;
       perMember: Map<string /* memberId */, {
