@@ -16,6 +16,8 @@
 [`kurone-kito/pnpm-project-template`](https://github.com/kurone-kito/pnpm-project-template)
 と [`kurone-kito/idd-skill`](https://github.com/kurone-kito/idd-skill)
 から bootstrap したばかりで、アプリ実装は後続の issue で進めます。
+中核機能「**匿名モード**」のデザイン詳細は
+[`docs/anonymous-mode.md`](docs/anonymous-mode.md) を参照。
 
 ## 技術スタック
 

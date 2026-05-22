@@ -15,7 +15,9 @@ parties. Anyone with the room URL can join — no account required.
 **Pre-MVP.** The repository was just bootstrapped from
 [`kurone-kito/pnpm-project-template`](https://github.com/kurone-kito/pnpm-project-template)
 and [`kurone-kito/idd-skill`](https://github.com/kurone-kito/idd-skill);
-application code lands in subsequent issues.
+application code lands in subsequent issues. See
+[`docs/anonymous-mode.md`](docs/anonymous-mode.md) for the design of
+the killer **anonymous mode** feature.
 
 ## Stack
 
