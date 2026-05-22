@@ -59,13 +59,20 @@ transition follows the same pattern:
    `transitionStartAt` — so the banner is roughly simultaneous across
    clients regardless of jitter.
 4. At `transitionStartAt`, the new mode takes effect:
-   - **OFF → ON**: live audio cuts; the TTS→STT path engages; each
+   - **OFF → ON**: live audio cuts for every member subject to
+     masking; the TTS→STT path engages for them; each masked
      member's identity triplet
      (`maskedName`, `maskedColor`, `ttsVoiceId`) is regenerated and
      broadcast in an `identity-shuffle` message; the displayed
-     identity becomes the masked one.
-   - **ON → OFF**: live audio resumes; real names and colors come
-     back; any unfired chameleon charges expire (see §6.10).
+     identity becomes the masked one for those members. When the
+     session was created with **GM is exempt** (§5), the GM is the
+     one and only member excluded from this step — their real name,
+     color, and live audio continue unchanged through the transition,
+     and they are absent from the `identity-shuffle` payload.
+   - **ON → OFF**: live audio resumes for every previously-masked
+     member; real names and colors come back; any unfired chameleon
+     charges expire (see §6.10). Members who were exempt (GM under
+     "GM is exempt") see no observable change at this transition.
 
 Inside one ON window each member's triplet is **stable** for the
 duration. Toggling OFF and then ON again produces fresh triplets —
@@ -274,14 +281,30 @@ visually indistinguishable, which breaks the in-game vocabulary
 - Any unfired grant is dropped when anonymous mode ends. No timer
   fires after the `transitionStartAt` for OFF.
 
+When a chameleon fires, the server emits two distinct messages:
+
+1. A `chameleon-fired` carrying the new identity, **scoped to the GM
+   and the grantee only** (see §7 routing).
+2. A fresh `identity-shuffle` broadcast to every connected member so
+   non-grantees just see the identities list update without learning
+   that a chameleon happened. The grant / fire / expire events are
+   never visible to non-grantees, which is what makes §6.2's
+   misdirection real rather than aspirational.
+
 *Rationale*: tying expiry to the anonymous-mode lifecycle keeps the
 state machine compact — there is no separate "charge expiration"
-logic to maintain, and no orphaned grants survive a mode flip.
+logic to maintain, and no orphaned grants survive a mode flip. The
+two-message fire (scoped `chameleon-fired` + broadcast
+`identity-shuffle`) keeps non-grantees inside the misdirection while
+still updating their displayed identities.
 
 ## 7. Protocol
 
-DataChannel messages broadcast by the Durable Object to every
-connected member:
+Most DataChannel messages emitted by the Durable Object are broadcast
+to every connected member; a small set is **scoped** to specific
+recipients to preserve the chameleon misdirection surface (§6.2). The
+routing table after the message-shape block below names which is
+which.
 
 ```ts
 type ServerMessage =
@@ -340,9 +363,33 @@ a separate "3s before" notice. Likewise the §3 mode-transition
 countdown is rendered by clients off `transitionStartAt` — no
 separate "3s before" ServerMessage.
 
-These types are reproduced from RFC #3 with no behavioral drift. When
-`packages/shared` is created, this section is the input the
-`feat(shared)` issue uses for the actual TypeScript module.
+### Routing
+
+| Message | Delivery |
+|---|---|
+| `mode-transition-scheduled` | broadcast to every connected member |
+| `identity-shuffle` | broadcast to every connected member |
+| `tts-utterance` | broadcast to every connected member |
+| `chameleon-granted` | **scoped**: GM + the grantee only |
+| `chameleon-fired` | **scoped**: GM + the grantee only (non-grantees receive a fresh `identity-shuffle` instead — see §6.10) |
+| `chameleon-expired` | **scoped**: GM + the grantee only |
+
+Scoped messages must be filtered at the Durable Object before send;
+the client side must never receive a `chameleon-*` event addressed to
+a different member. Implementations that fan all messages out to all
+peers and rely on client-side filtering leak the misdirection surface
+and violate this contract.
+
+These types are reproduced from RFC #3 with the
+`color → maskedColor` and `startsAt → transitionStartAt` renames
+locked in by PR #5 (the same PR that landed this doc), and with the
+above explicit routing semantics added on top — `chameleon-granted`
+and `chameleon-fired` and `chameleon-expired` were originally written
+as plain broadcast events in RFC #3, which would have leaked the
+misdirection. When `packages/shared` is created, this section is the
+input the `feat(shared)` issue uses for the actual TypeScript module,
+and the `feat(signaling)` issue must implement the routing filter on
+the server side.
 
 ## 8. Room state
 
