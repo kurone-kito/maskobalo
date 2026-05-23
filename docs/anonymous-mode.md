@@ -8,12 +8,17 @@ load-bearing differentiator from a generic VC app is **anonymous
 mode**: a GM-controlled state in which every member subject to
 masking has their name and color shuffled and their live audio
 replaced with random-machine-voice
-**STT→TTS** chaining (each speaker's voice is transcribed locally,
-the transcript is broadcast, and every receiver renders it back to
-audio in the speaker's assigned synthetic voice), so no one can
-identify each other from voice cues while the mode is on. Whether
-the GM is one of the masked members is a session-creation choice
-(see §5). The mode can be deepened further by handing out
+**STT→TTS** chaining (each speaker's voice is captured client-side
+and sent through a Web Speech API STT pipeline — which on Chrome
+proxies the audio to a remote provider, see §4 for the privacy
+posture — the resulting transcript is broadcast, and every receiver
+renders it back to audio in the speaker's assigned synthetic
+voice), so masked members cannot identify each other from voice
+cues while the mode is on. Whether the GM is one of the masked
+members is a session-creation choice (see §5) — if "GM is exempt,"
+the exempt GM keeps live voice and the no-voice-cues guarantee
+applies between the remaining masked members rather than the entire
+room. The mode can be deepened further by handing out
 **chameleon** charges that re-mask individual members mid-window. This
 document is the durable source of truth for the design; PRs that touch
 any of the moving parts below should link to a specific section of
