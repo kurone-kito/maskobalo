@@ -38,12 +38,22 @@ Session creation returns **two URLs** at the same time:
 
 The GM URL is displayed on the session-creation screen with an
 explicit "save / bookmark this — without it you cannot reclaim GM"
-warning. As a convenience, the GM's browser also stashes
-`{ roomId: token }` in localStorage so a same-browser refresh resumes
-the GM role transparently. There is no password reset, no email
-recovery, no transferable backup phrase for MVP. Losing the GM URL
-means losing the GM seat for that session; the session continues
-without a GM.
+warning. As a convenience, the GM's browser stashes
+`{ roomId: token }` in **`sessionStorage`** (not `localStorage`) so a
+same-tab refresh resumes the GM role transparently, while a fresh
+tab or browser restart requires re-opening the GM URL. The choice of
+`sessionStorage` over `localStorage` is deliberate: the GM token is
+an admin credential, and `localStorage` would survive every tab
+restart and remain readable to any script injected via XSS in the
+web app, materially raising the blast radius of an XSS vulnerability.
+`sessionStorage` keeps the credential scoped to the active tab and
+clears it on tab close. The web app additionally relies on a strict
+Content-Security-Policy that disallows `unsafe-inline` to keep
+script-injection vectors narrow; if either control is relaxed the
+storage decision must be revisited together with the new threat
+model. There is no password reset, no email recovery, no
+transferable backup phrase for MVP. Losing the GM URL means losing
+the GM seat for that session; the session continues without a GM.
 
 The two-URL model was preferred over the alternatives ("first joiner
 becomes GM" → fragile under refresh and race conditions; "GM password
@@ -98,7 +108,7 @@ attached identities. The Durable Object mints a fresh `shuffleId`
 whenever it regenerates the triplet table, which happens on:
 
 - every OFF→ON transition (the new masked window's first
-  `identity-shuffle`); and
+  `identity-shuffle`);
 - every chameleon fire (per §6.10's two-message protocol, the
   follow-up broadcast `identity-shuffle` carries a new `shuffleId`); and
 - every new member joining a session that is already ON. The Durable
