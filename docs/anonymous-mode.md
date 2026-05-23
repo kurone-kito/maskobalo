@@ -295,8 +295,9 @@ When a chameleon fires, the server emits two distinct messages:
    and the grantee only** (see §7 routing).
 2. A fresh `identity-shuffle` broadcast to every connected member so
    non-grantees see the identities list update without receiving the
-   explicit chameleon-* event metadata (the `grantId`, the `member`
-   that fired, the `firesAt` schedule). The chameleon-granted /
+   explicit chameleon-* event metadata (the `grantId`, the
+   `memberId` that fired, the `firesAt` schedule). The
+   chameleon-granted /
    chameleon-fired / chameleon-expired events themselves never reach
    non-grantees.
 
@@ -365,7 +366,7 @@ type ServerMessage =
   | {
       type: 'chameleon-fired';
       grantId: string;
-      member: string;
+      memberId: string;
       newIdentity: {
         maskedName: string;
         maskedColor: string;
@@ -463,10 +464,15 @@ interface RoomState {
 }
 ```
 
-This is reproduced from RFC #3 with no behavioral drift. When
-`packages/signaling` is created, this section is the input the
-`feat(signaling)` issue uses for the Durable Object's persistent
-shape.
+This is reproduced from RFC #3 with the same three corrections
+applied in §7: the `startsAt` → `transitionStartAt` field-name
+normalization (visible on `RoomState.anonymousMode.transition`), the
+`color` → `maskedColor` normalization inside `currentShuffle.perMember`,
+and the addition of `chameleons: Map<grantId, …>` whose routing is
+**scoped** per §7. When `packages/signaling` is created, this section
+is the input the `feat(signaling)` issue uses for the Durable
+Object's persistent shape; the matching scoped-send filter on the
+server side is also a `feat(signaling)` responsibility.
 
 ## 9. Out of scope
 
