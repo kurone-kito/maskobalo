@@ -52,12 +52,15 @@ an admin credential, and `localStorage` would survive every tab
 restart and remain readable to any script injected via XSS in the
 web app, materially raising the blast radius of an XSS vulnerability.
 `sessionStorage` keeps the credential scoped to the active tab and
-clears it on tab close. The web app additionally relies on a strict
-Content-Security-Policy that disallows `unsafe-inline` to keep
-script-injection vectors narrow; if either control is relaxed the
-storage decision must be revisited together with the new threat
-model. There is no password reset, no email recovery, no
-transferable backup phrase for MVP. Losing the GM URL means losing
+clears it on tab close. The web app **must ship with** a strict
+Content-Security-Policy that disallows `unsafe-inline` so that
+script-injection vectors stay narrow; the CSP is a hard requirement
+for the eventual `packages/web` implementation, not a control that
+already exists today. If either the storage choice or the CSP
+requirement is relaxed in the future, the decision must be
+revisited together with the new threat model. There is no password
+reset, no email recovery, no transferable backup phrase for MVP.
+Losing the GM URL means losing
 the GM seat for that session; the session continues without a GM.
 
 The two-URL model was preferred over the alternatives ("first joiner
@@ -412,17 +415,25 @@ the carried token against the recorded `gmToken` and either:
 
 - promotes the connection to the GM role for the rest of its
   lifetime by setting `RoomState.gmMemberId` to that connection's
-  `memberId`; or
+  `memberId`, then replies with a `welcome` ServerMessage carrying
+  the assigned `memberId` and the current room snapshot; or
 - accepts the connection as a regular member when `gmToken` is
-  omitted or empty (and leaves `RoomState.gmMemberId` unchanged); or
+  omitted or empty (and leaves `RoomState.gmMemberId` unchanged),
+  then replies with the same `welcome` ServerMessage; or
 - closes the WebSocket with a 4401 application close code when a
   `gmToken` is present but does not match.
 
-`RoomState.gmMemberId` is cleared when the GM disconnects. If a new
-GM URL holder reconnects later, they re-authenticate via `hello` and
-re-claim the seat by repopulating `gmMemberId`. Admin-action
-authorization checks read `gmMemberId` and compare it with the
-sender's `memberId`.
+`RoomState.gmMemberId` is cleared **only when the disconnecting
+socket's `memberId` still equals the current `RoomState.gmMemberId`**
+— in a reconnect race where a fresh GM socket authenticates before
+the old socket's `close` event fires, the new socket has already
+overwritten `gmMemberId`, so the old socket's later close is a
+no-op for GM-seat bookkeeping. This guard prevents the spurious
+drop where a literal implementation would clear the freshly-claimed
+seat. If a new GM URL holder reconnects later, they re-authenticate
+via `hello` and re-claim the seat by repopulating `gmMemberId`.
+Admin-action authorization checks read `gmMemberId` and compare it
+with the sender's `memberId`.
 
 Admin-only ClientMessages (`request-mode-toggle`, `grant-chameleon`)
 are rejected with a `4403`-style close when sent from a connection
@@ -458,11 +469,13 @@ spoofs:
   on all clients deterministic and removes the rapid-double-click /
   network-replay race.
 - `grant-chameleon` — accepted only when (a) the sender's
-  `memberId === RoomState.gmMemberId` **and** (b)
-  `RoomState.anonymousMode.active === true`. Grants attempted while
-  anonymous mode is OFF are closed with `4403`; they would otherwise
-  create stale "pre-loaded" grants that violate §6's
-  ON-window-only lifecycle.
+  `memberId === RoomState.gmMemberId`, (b)
+  `RoomState.anonymousMode.active === true`, **and** (c) the
+  message's `toMember !== RoomState.gmMemberId` (the no-self-grant
+  rule from §6.5; a self-targeted grant is rejected with `4403`).
+  Grants attempted while anonymous mode is OFF are also closed
+  with `4403`; they would otherwise create stale "pre-loaded"
+  grants that violate §6's ON-window-only lifecycle.
 - `tts-utterance` — accepted only when (a)
   `RoomState.anonymousMode.active === true` **and** (b) the sender's
   `memberId` appears in the current `currentShuffle.perMember` map
@@ -486,7 +499,8 @@ which.
 
 ```ts
 export type ServerMessage =
-  | { type: 'mode-transition-scheduled'; mode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ }
+  | { type: 'mode-transition-scheduled'; targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ }
+  | { type: 'welcome'; memberId: string; gmGranted: boolean; anonymousMode: { active: boolean; transition?: { targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ } }; currentShuffleId?: string /* present when anonymousMode.active is true */ }
   | {
       type: 'identity-shuffle';
       shuffleId: string;
@@ -546,6 +560,7 @@ separate "3s before" ServerMessage.
 
 | Message | Delivery |
 |---|---|
+| `welcome` | **scoped**: the just-`hello`-authenticated socket only — never broadcast |
 | `mode-transition-scheduled` | broadcast to every connected member |
 | `identity-shuffle` | broadcast to every connected member (including for the post-`hello` newcomer event during an active ON window, since the triplet table now contains the joiner's row — see §3 *`shuffleId` semantics*) |
 | `tts-utterance` | broadcast to every connected member |
@@ -588,7 +603,7 @@ interface RoomState {
   anonymousMode: {
     active: boolean;
     gmExempt: boolean; // decided at session creation, immutable
-    transition?: { targetActive: boolean; transitionStartAt: number };
+    transition?: { targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ };
     currentShuffle?: {
       shuffleId: string;
       perMember: Map<string /* memberId */, {
