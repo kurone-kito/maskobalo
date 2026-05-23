@@ -7,7 +7,10 @@ for tabletop role-playing games and impromptu net parties. The
 load-bearing differentiator from a generic VC app is **anonymous
 mode**: a GM-controlled state in which every member's name and color
 are shuffled and live audio is replaced with random-machine-voice
-TTS→STT chaining, so no one can identify each other from voice cues
+**STT→TTS** chaining (each speaker's voice is transcribed locally,
+the transcript is broadcast, and every receiver renders it back to
+audio in the speaker's assigned synthetic voice), so no one can
+identify each other from voice cues
 while the mode is on. The mode can be deepened further by handing out
 **chameleon** charges that re-mask individual members mid-window. This
 document is the durable source of truth for the design; PRs that touch
@@ -60,7 +63,10 @@ transition follows the same pattern:
    clients regardless of jitter.
 4. At `transitionStartAt`, the new mode takes effect:
    - **OFF → ON**: live audio cuts for every member subject to
-     masking; the TTS→STT path engages for them; each masked
+     masking; the STT→TTS path engages for them (each speaker's
+     local STT captures their words, the text rides the WebSocket,
+     and each receiver's local TTS renders the text in the speaker's
+     assigned voice); each masked
      member's identity triplet
      (`maskedName`, `maskedColor`, `ttsVoiceId`) is regenerated and
      broadcast in an `identity-shuffle` message; the displayed
@@ -319,12 +325,14 @@ protocol can do without the full-table-shuffle noise option.
 
 All authoritative session messages between the client and the server
 flow over the **WebSocket** that each client opens to the Durable
-Object (a Cloudflare Workers + Durable Objects standard). The
-RTCDataChannel transport stays reserved for the direct peer-to-peer
-audio path between members while anonymous mode is **off**: members
-exchange live audio in a WebRTC mesh and the Durable Object only
-relays signalling (offer / answer / ICE) for that path. None of the
-ServerMessage / ClientMessage shapes below ride RTCDataChannel.
+Object (a Cloudflare Workers + Durable Objects standard). The direct
+peer-to-peer **WebRTC audio media tracks** (carried over each member
+pair's `RTCPeerConnection`, *not* over `RTCDataChannel`) are reserved
+for the live-voice path between members while anonymous mode is
+**off**: members exchange live audio in a WebRTC mesh and the
+Durable Object only relays signalling (offer / answer / ICE) for
+that path. None of the ServerMessage / ClientMessage shapes below
+ride that peer-to-peer audio path or `RTCDataChannel`.
 
 Most WebSocket messages emitted by the Durable Object are broadcast
 to every connected member; a small set is **scoped** to specific
@@ -469,7 +477,11 @@ tracked as separate follow-up issues:
 - Cloudflare Workers AI Whisper binding for the STT path.
 - Multi-region scale considerations — single-region Cloudflare for
   MVP.
-- Persistent chat history (wizard decision: none for MVP).
+- Persistent chat history — there is none for MVP. Chat lives only
+  in the Durable Object's transient memory for the session lifetime
+  and is dropped when the session ends, matching the no-database
+  posture recorded in `.github/idd/config.json` and the `README.md`
+  Stack table.
 - Mobile Safari / Firefox support — degraded by the Web Speech API
   choice; revisits alongside Whisper.
 - Recovery flow if the GM token is lost — MVP accepts "session
