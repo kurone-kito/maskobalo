@@ -117,9 +117,14 @@ the triplet table actually changes**:
 
 - every OFF→ON transition (the new masked window's first
   `identity-shuffle`);
-- every chameleon fire (per §6.10's two-message protocol, the
-  follow-up `identity-shuffle` carries the newly-minted `shuffleId`);
-  and
+- every **chameleon recomputation tick** — when one or more
+  chameleon fires resolve in the same broadcast tick the Durable
+  Object recomputes the affected triplets atomically and emits a
+  **single** `identity-shuffle` carrying **one** newly-minted
+  `shuffleId` for the whole tick, never one `shuffleId` per
+  individual fire (see §6.8 for the simultaneity rule and §6.10
+  for the two-message protocol that pairs the broadcast with one
+  scoped `chameleon-fired` per co-firing grantee); and
 - every new member joining a session that is already ON. The
   Durable Object inserts the joiner's row into
   `currentShuffle.perMember` (this is what makes the joiner
