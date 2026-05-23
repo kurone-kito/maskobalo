@@ -103,29 +103,26 @@ re-shuffles a single member's triplet mid-window.
 ### `shuffleId` semantics
 
 Every `identity-shuffle` payload carries a `shuffleId` — an opaque
-string identifying the particular shuffle that produced the
-attached identities. The Durable Object mints a fresh `shuffleId`
-**whenever the underlying triplet table actually changes**. Two
-distinct event classes follow from that single rule:
+string identifying the particular shuffle that produced the attached
+identities. The Durable Object mints a fresh `shuffleId` **whenever
+the triplet table actually changes**:
 
-- **Mints a new `shuffleId`** (the triplet table itself changes):
-  - every OFF→ON transition (the new masked window's first
-    `identity-shuffle`); and
-  - every chameleon fire (per §6.10's two-message protocol, the
-    follow-up broadcast `identity-shuffle` carries the newly-minted
-    `shuffleId`).
-- **Reuses the current `shuffleId`** (the triplet table does not
-  change, only the recipient set does):
-  - every new member joining a session that is already ON. The
-    Durable Object emits a **scoped** `identity-shuffle` to the
-    just-joined socket immediately after its `hello` handshake (§7's
-    WebSocket authentication subsection), reusing the **current**
-    `shuffleId` rather than minting a new one — the joiner needs the
-    existing mapping; the other members already have it, and the
-    underlying triplet table is unchanged. This avoids the gap where
-    a late joiner would otherwise see `tts-utterance` events with no
-    `(maskedName, maskedColor, ttsVoiceId)` reference to resolve
-    them against.
+- every OFF→ON transition (the new masked window's first
+  `identity-shuffle`);
+- every chameleon fire (per §6.10's two-message protocol, the
+  follow-up `identity-shuffle` carries the newly-minted `shuffleId`);
+  and
+- every new member joining a session that is already ON. The Durable
+  Object inserts the joiner's row into `currentShuffle.perMember`
+  (this is what makes the joiner eligible to speak under §7's
+  `tts-utterance` validation rule), mints a fresh `shuffleId`, and
+  emits a **broadcast** `identity-shuffle` so every connected
+  member's `currentShuffle.perMember` map is updated to include the
+  newcomer. The joiner receives the same broadcast as everyone else
+  immediately after its `hello` handshake completes (§7's WebSocket
+  authentication subsection), so the gap where a late joiner would
+  otherwise see `tts-utterance` events without a corresponding
+  `(maskedName, maskedColor, ttsVoiceId)` mapping never opens.
 
 `shuffleId` is **not** reused across transitions, so clients can use
 it for idempotency (drop or merge an `identity-shuffle` they already
@@ -435,13 +432,32 @@ A ClientMessage that fails its rule is dropped silently for low-risk
 spoof attempts and surfaces as a `4403` close for explicit-admin
 spoofs:
 
-- `hello` — always accepted as the first frame; if a `gmToken` is
-  present but does not match the room's `gmToken`, the socket is
-  closed with a `4401`.
-- `request-mode-toggle` — accepted only on a connection that
-  successfully authenticated as the GM via `hello.gmToken`. Otherwise
-  closed with `4403`.
-- `grant-chameleon` — same as `request-mode-toggle` (GM-only).
+- **First-frame handshake gate** — the very first frame on any
+  unauthenticated WebSocket must be a `hello`. Any other
+  ClientMessage variant arriving before a successful `hello`
+  triggers a `4400` close (Bad Request). Conversely, a `hello`
+  arriving on an already-authenticated socket is also closed with
+  `4400` — the handshake is not idempotent.
+- `hello` — accepted as the first frame; if a `gmToken` is present
+  but does not match the room's `gmToken`, the socket is closed with
+  a `4401`. On success the connection receives a `memberId` and the
+  current state (`identity-shuffle` if anonymous mode is ON, plus
+  any active `transition`).
+- `request-mode-toggle` — accepted only when the sender's
+  `memberId === RoomState.gmMemberId`. Otherwise closed with
+  `4403`. Additionally, if `RoomState.anonymousMode.transition` is
+  already set (i.e., a countdown is in flight), the request is
+  **silently ignored** rather than queued or replacing the pending
+  transition; the GM must wait for the current transition to land
+  before scheduling the next one. This keeps countdown rendering
+  on all clients deterministic and removes the rapid-double-click /
+  network-replay race.
+- `grant-chameleon` — accepted only when (a) the sender's
+  `memberId === RoomState.gmMemberId` **and** (b)
+  `RoomState.anonymousMode.active === true`. Grants attempted while
+  anonymous mode is OFF are closed with `4403`; they would otherwise
+  create stale "pre-loaded" grants that violate §6's
+  ON-window-only lifecycle.
 - `tts-utterance` — accepted only when (a)
   `RoomState.anonymousMode.active === true` **and** (b) the sender's
   `memberId` appears in the current `currentShuffle.perMember` map
@@ -526,7 +542,7 @@ separate "3s before" ServerMessage.
 | Message | Delivery |
 |---|---|
 | `mode-transition-scheduled` | broadcast to every connected member |
-| `identity-shuffle` | broadcast to every connected member, except for the post-`hello` resend to a joiner during an active ON window (see §3 *`shuffleId` semantics*) which is scoped to that one joiner |
+| `identity-shuffle` | broadcast to every connected member (including for the post-`hello` newcomer event during an active ON window, since the triplet table now contains the joiner's row — see §3 *`shuffleId` semantics*) |
 | `tts-utterance` | broadcast to every connected member |
 | `chameleon-granted` | **scoped**: GM + the grantee only |
 | `chameleon-fired` | **scoped**: GM + the grantee only (non-grantees receive a fresh `identity-shuffle` instead — see §6.10) |
