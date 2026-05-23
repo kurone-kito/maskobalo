@@ -416,7 +416,7 @@ the carried token against the recorded `gmToken` and either:
 `RoomState.gmMemberId` is cleared when the GM disconnects. If a new
 GM URL holder reconnects later, they re-authenticate via `hello` and
 re-claim the seat by repopulating `gmMemberId`. Admin-action
-authorisation checks read `gmMemberId` and compare it with the
+authorization checks read `gmMemberId` and compare it with the
 sender's `memberId`.
 
 Admin-only ClientMessages (`request-mode-toggle`, `grant-chameleon`)
