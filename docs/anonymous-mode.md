@@ -581,7 +581,7 @@ which.
 ```ts
 export type ServerMessage =
   | { type: 'mode-transition-scheduled'; targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ }
-  | { type: 'welcome'; memberId: string; gmGranted: boolean; gmExempt: boolean; anonymousMode: { active: boolean; transition?: { targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ }; shuffleId?: string /* present when anonymousMode.active is true; matches the shuffleId carried by the identity-shuffle that arrives immediately after this welcome */ } }
+  | { type: 'welcome'; memberId: string; gmGranted: boolean; gmExempt: boolean; anonymousMode: { active: boolean; transition?: { targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ }; shuffleId?: string /* present when anonymousMode.active is true; baseline shuffleId the DO holds at hello time. A non-exempt joiner is followed immediately by a broadcast identity-shuffle whose shuffleId may equal this value (the join-driven mint) or be newer (an interleaved chameleon shuffle); the exempt GM under §5 receives no follow-up identity-shuffle at all because the join leaves the triplet table unchanged */ } }
   | {
       type: 'identity-shuffle';
       shuffleId: string;
