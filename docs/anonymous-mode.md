@@ -416,10 +416,20 @@ the carried token against the recorded `gmToken` and either:
 - promotes the connection to the GM role for the rest of its
   lifetime by setting `RoomState.gmMemberId` to that connection's
   `memberId`, then replies with a `welcome` ServerMessage carrying
-  the assigned `memberId` and the current room snapshot; or
+  the assigned `memberId`, the `gmGranted` flag, the `gmExempt`
+  session-creation choice, and the current `anonymousMode.active` /
+  `anonymousMode.transition` slice. The `welcome` is intentionally
+  the **bootstrap minimum** — when anonymous mode is active the
+  Durable Object immediately follows with a normal **broadcast**
+  `identity-shuffle` that delivers the current
+  `(maskedName, maskedColor, ttsVoiceId)` mapping (the joiner
+  receives it as part of the same broadcast), so the snapshot the
+  client renders is `welcome + identity-shuffle`, not `welcome`
+  alone; or
 - accepts the connection as a regular member when `gmToken` is
   omitted or empty (and leaves `RoomState.gmMemberId` unchanged),
-  then replies with the same `welcome` ServerMessage; or
+  then replies with the same `welcome` ServerMessage and the same
+  `identity-shuffle` follow-up when anonymous mode is active; or
 - closes the WebSocket with a 4401 application close code when a
   `gmToken` is present but does not match.
 
@@ -500,7 +510,7 @@ which.
 ```ts
 export type ServerMessage =
   | { type: 'mode-transition-scheduled'; targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ }
-  | { type: 'welcome'; memberId: string; gmGranted: boolean; anonymousMode: { active: boolean; transition?: { targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ } }; currentShuffleId?: string /* present when anonymousMode.active is true */ }
+  | { type: 'welcome'; memberId: string; gmGranted: boolean; gmExempt: boolean; anonymousMode: { active: boolean; transition?: { targetMode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ }; shuffleId?: string /* present when anonymousMode.active is true; matches the shuffleId carried by the identity-shuffle that arrives immediately after this welcome */ } }
   | {
       type: 'identity-shuffle';
       shuffleId: string;
@@ -555,6 +565,20 @@ client-side render based on `firesAt`; the server does not broadcast
 a separate "3s before" notice. Likewise the §3 mode-transition
 countdown is rendered by clients off `transitionStartAt` — no
 separate "3s before" ServerMessage.
+
+### Delivery semantics
+
+The `identity-shuffle.identities` array is **always a full snapshot**
+of every member subject to masking, never a delta. On receipt,
+clients **replace** their entire local `currentShuffle.perMember`
+map with the message's contents, keyed by `memberId`. Members
+omitted from the new array — for example, the exempt GM under §5,
+or a member who disconnected just before the shuffle — must be
+removed from the local map. The single-`identity-shuffle` rule for
+batched simultaneous chameleon fires (§6.8) is consistent with this:
+the one broadcast still carries every masked member's current row,
+so the snapshot semantics never change between batched and
+single-fire cases.
 
 ### Routing
 
