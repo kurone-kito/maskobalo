@@ -342,7 +342,7 @@ routing table after the message-shape block below names which is
 which.
 
 ```ts
-type ServerMessage =
+export type ServerMessage =
   | { type: 'mode-transition-scheduled'; mode: 'on' | 'off'; transitionStartAt: number /* ms epoch */ }
   | {
       type: 'identity-shuffle';
@@ -355,11 +355,11 @@ type ServerMessage =
         voiceAdjust?: { pitch: number; rate: number }; // pool-exhaustion fallback
       }>;
     }
-  | { type: 'tts-utterance'; from: string /* memberId */; text: string; ts: number }
+  | { type: 'tts-utterance'; from: string /* memberId */; text: string; ts: number /* ms epoch */ }
   | {
       type: 'chameleon-granted';
       grantId: string;
-      toMember: string;
+      toMember: string /* memberId */;
       mode: 'opt-in' | 'timed-3s' | 'timed-20s' | 'timed-40s' | 'timed-60s';
       firesAt?: number /* ms epoch, present only for timed-* modes */;
     }
@@ -381,12 +381,12 @@ Client → server (admin paths require the GM token from the WS
 handshake):
 
 ```ts
-type ClientMessage =
+export type ClientMessage =
   | { type: 'request-mode-toggle'; targetMode: 'on' | 'off' } // GM only
   | { type: 'tts-utterance'; text: string } // any masked speaker, while anonymous mode is on
   | {
       type: 'grant-chameleon';
-      toMember: string;
+      toMember: string /* memberId */;
       mode: 'opt-in' | 'timed-3s' | 'timed-20s' | 'timed-40s' | 'timed-60s';
     } // GM only
   | { type: 'fire-opt-in-chameleon'; grantId: string }; // grantee only
@@ -454,7 +454,7 @@ interface RoomState {
       }>;
     };
     chameleons: Map<string /* grantId */, {
-      toMember: string;
+      toMember: string /* memberId */;
       mode: 'opt-in' | 'timed-3s' | 'timed-20s' | 'timed-40s' | 'timed-60s';
       grantedAt: number;
       firesAt?: number; // present for timed-* modes
