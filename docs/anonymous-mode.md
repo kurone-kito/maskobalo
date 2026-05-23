@@ -409,12 +409,18 @@ ClientMessage as the very first frame. The Durable Object validates
 the carried token against the recorded `gmToken` and either:
 
 - promotes the connection to the GM role for the rest of its
-  lifetime (the matching `RoomState.members[memberId]` is marked as
-  GM internally); or
+  lifetime by setting `RoomState.gmMemberId` to that connection's
+  `memberId`; or
 - accepts the connection as a regular member when `gmToken` is
-  omitted or empty; or
+  omitted or empty (and leaves `RoomState.gmMemberId` unchanged); or
 - closes the WebSocket with a 4401 application close code when a
   `gmToken` is present but does not match.
+
+`RoomState.gmMemberId` is cleared when the GM disconnects. If a new
+GM URL holder reconnects later, they re-authenticate via `hello` and
+re-claim the seat by repopulating `gmMemberId`. Admin-action
+authorisation checks read `gmMemberId` and compare it with the
+sender's `memberId`.
 
 Admin-only ClientMessages (`request-mode-toggle`, `grant-chameleon`)
 are rejected with a `4403`-style close when sent from a connection
@@ -552,10 +558,11 @@ state:
 interface RoomState {
   roomId: string;
   gmToken: string; // never sent to non-GM peers
+  gmMemberId?: string /* memberId of the connected GM, set after a successful `hello` with matching `gmToken`; cleared when the GM disconnects */;
   members: Map<string /* memberId */, {
     nickname: string; // real
     color: string;    // real
-    connectedAt: number;
+    connectedAt: number /* ms epoch */;
   }>;
   anonymousMode: {
     active: boolean;
@@ -573,23 +580,29 @@ interface RoomState {
     chameleons: Map<string /* grantId */, {
       toMember: string /* memberId */;
       mode: 'opt-in' | 'timed-3s' | 'timed-20s' | 'timed-40s' | 'timed-60s';
-      grantedAt: number;
-      firesAt?: number; // present for timed-* modes
-      consumedAt?: number; // set when fired or expired
+      grantedAt: number /* ms epoch */;
+      firesAt?: number /* ms epoch; present for timed-* modes */;
+      consumedAt?: number /* ms epoch; set when fired or expired */;
     }>;
   };
 }
 ```
 
-This is reproduced from RFC #3 with the same three corrections
-applied in §7: the `startsAt` → `transitionStartAt` field-name
-normalization (visible on `RoomState.anonymousMode.transition`), the
-`color` → `maskedColor` normalization inside `currentShuffle.perMember`,
-and the addition of `chameleons: Map<grantId, …>` whose routing is
-**scoped** per §7. When `packages/signaling` is created, this section
-is the input the `feat(signaling)` issue uses for the Durable
-Object's persistent shape; the matching scoped-send filter on the
-server side is also a `feat(signaling)` responsibility.
+This is reproduced from RFC #3 with the corrections applied in §7
+plus the `gmMemberId` and `/* ms epoch */` annotations added during
+PR #5's review loop: the `startsAt` → `transitionStartAt`
+field-name normalization (visible on
+`RoomState.anonymousMode.transition`), the `color` → `maskedColor`
+normalization inside `currentShuffle.perMember`, the addition of
+`chameleons: Map<grantId, …>` whose routing is **scoped** per §7,
+the `gmMemberId?: string` field (so the GM seat is a concrete piece
+of state rather than an implicit flag), and the `/* ms epoch */`
+unit annotation on every numeric timestamp slot (`connectedAt`,
+`transitionStartAt`, `grantedAt`, `firesAt`, `consumedAt`). When
+`packages/signaling` is created, this section is the input the
+`feat(signaling)` issue uses for the Durable Object's persistent
+shape; the matching scoped-send filter on the server side is also a
+`feat(signaling)` responsibility.
 
 ## 9. Out of scope
 
