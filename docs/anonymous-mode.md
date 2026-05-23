@@ -5,13 +5,15 @@
 maskobalo (Esperanto for *masquerade ball*) is a voice chat application
 for tabletop role-playing games and impromptu net parties. The
 load-bearing differentiator from a generic VC app is **anonymous
-mode**: a GM-controlled state in which every member's name and color
-are shuffled and live audio is replaced with random-machine-voice
+mode**: a GM-controlled state in which every member subject to
+masking has their name and color shuffled and their live audio
+replaced with random-machine-voice
 **STT→TTS** chaining (each speaker's voice is transcribed locally,
 the transcript is broadcast, and every receiver renders it back to
 audio in the speaker's assigned synthetic voice), so no one can
-identify each other from voice cues
-while the mode is on. The mode can be deepened further by handing out
+identify each other from voice cues while the mode is on. Whether
+the GM is one of the masked members is a session-creation choice
+(see §5). The mode can be deepened further by handing out
 **chameleon** charges that re-mask individual members mid-window. This
 document is the durable source of truth for the design; PRs that touch
 any of the moving parts below should link to a specific section of
@@ -87,6 +89,24 @@ there is no continuous mid-window re-shuffle.
 The single documented exception to the in-window stability rule is the
 [Chameleon extension](#6-chameleon-extension), which intentionally
 re-shuffles a single member's triplet mid-window.
+
+### `shuffleId` semantics
+
+Every `identity-shuffle` payload carries a `shuffleId` — an opaque
+string identifying the particular shuffle that produced the
+attached identities. The Durable Object mints a fresh `shuffleId`
+whenever it regenerates the triplet table, which happens on:
+
+- every OFF→ON transition (the new masked window's first
+  `identity-shuffle`); and
+- every chameleon fire (per §6.10's two-message protocol, the
+  follow-up broadcast `identity-shuffle` carries a new `shuffleId`).
+
+`shuffleId` is **not** reused across transitions, so clients can use
+it for idempotency (drop or merge an `identity-shuffle` they already
+hold) and for log-correlation. There is no `shuffleId` while
+anonymous mode is **off**; `RoomState.anonymousMode.currentShuffle`
+is itself optional and is absent in that state.
 
 ## 4. TTS / STT path
 
