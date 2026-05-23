@@ -100,7 +100,16 @@ whenever it regenerates the triplet table, which happens on:
 - every OFF→ON transition (the new masked window's first
   `identity-shuffle`); and
 - every chameleon fire (per §6.10's two-message protocol, the
-  follow-up broadcast `identity-shuffle` carries a new `shuffleId`).
+  follow-up broadcast `identity-shuffle` carries a new `shuffleId`); and
+- every new member joining a session that is already ON. The Durable
+  Object emits a **scoped** `identity-shuffle` to the just-joined
+  socket immediately after its `hello` handshake (§7's WebSocket
+  authentication subsection), reusing the **current** `shuffleId`
+  rather than minting a new one — the joiner needs the existing
+  mapping; the other members already have it. This avoids the gap
+  where a late joiner would otherwise see `tts-utterance` events
+  with no `(maskedName, maskedColor, ttsVoiceId)` reference to
+  resolve them against.
 
 `shuffleId` is **not** reused across transitions, so clients can use
 it for idempotency (drop or merge an `identity-shuffle` they already
@@ -348,12 +357,35 @@ All authoritative session messages between the client and the server
 flow over the **WebSocket** that each client opens to the Durable
 Object (a Cloudflare Workers + Durable Objects standard). The direct
 peer-to-peer **WebRTC audio media tracks** (carried over each member
-pair's `RTCPeerConnection`, *not* over `RTCDataChannel`) are reserved
-for the live-voice path between members while anonymous mode is
-**off**: members exchange live audio in a WebRTC mesh and the
-Durable Object only relays signalling (offer / answer / ICE) for
-that path. None of the ServerMessage / ClientMessage shapes below
-ride that peer-to-peer audio path or `RTCDataChannel`.
+pair's `RTCPeerConnection`, *not* over `RTCDataChannel`) carry the
+live-voice path between **unmasked** members — that is, every member
+when anonymous mode is **off**, and just the exempt GM (per §5) when
+anonymous mode is on under a GM-exempt session. The Durable Object
+only relays signaling (offer / answer / ICE) for those tracks. None
+of the ServerMessage / ClientMessage shapes below ride that
+peer-to-peer audio path or `RTCDataChannel`.
+
+### WebSocket authentication
+
+The GM token from the `#gm={token}` URL fragment (§2) is **not**
+visible to the server during the WebSocket upgrade — URL fragments
+are stripped before the upgrade request leaves the browser. Clients
+authenticate after the WebSocket opens by sending a `hello`
+ClientMessage as the very first frame. The Durable Object validates
+the carried token against the recorded `gmToken` and either:
+
+- promotes the connection to the GM role for the rest of its
+  lifetime (the matching `RoomState.members[memberId]` is marked as
+  GM internally); or
+- accepts the connection as a regular member when `gmToken` is
+  omitted or empty; or
+- closes the WebSocket with a 4401 application close code when a
+  `gmToken` is present but does not match.
+
+Admin-only ClientMessages (`request-mode-toggle`, `grant-chameleon`)
+are rejected with a `4403`-style close when sent from a connection
+that did not authenticate as the GM. See the `hello` shape in the
+ClientMessage block below.
 
 Most WebSocket messages emitted by the Durable Object are broadcast
 to every connected member; a small set is **scoped** to specific
@@ -402,6 +434,7 @@ handshake):
 
 ```ts
 export type ClientMessage =
+  | { type: 'hello'; nickname: string; gmToken?: string } // mandatory first frame; gmToken is the value from the #gm=… URL fragment when present
   | { type: 'request-mode-toggle'; targetMode: 'on' | 'off' } // GM only
   | { type: 'tts-utterance'; text: string } // any masked speaker, while anonymous mode is on
   | {
@@ -423,7 +456,7 @@ separate "3s before" ServerMessage.
 | Message | Delivery |
 |---|---|
 | `mode-transition-scheduled` | broadcast to every connected member |
-| `identity-shuffle` | broadcast to every connected member |
+| `identity-shuffle` | broadcast to every connected member, except for the post-`hello` resend to a joiner during an active ON window (see §3 *`shuffleId` semantics*) which is scoped to that one joiner |
 | `tts-utterance` | broadcast to every connected member |
 | `chameleon-granted` | **scoped**: GM + the grantee only |
 | `chameleon-fired` | **scoped**: GM + the grantee only (non-grantees receive a fresh `identity-shuffle` instead — see §6.10) |
