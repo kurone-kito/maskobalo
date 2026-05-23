@@ -105,21 +105,27 @@ re-shuffles a single member's triplet mid-window.
 Every `identity-shuffle` payload carries a `shuffleId` — an opaque
 string identifying the particular shuffle that produced the
 attached identities. The Durable Object mints a fresh `shuffleId`
-whenever it regenerates the triplet table, which happens on:
+**whenever the underlying triplet table actually changes**. Two
+distinct event classes follow from that single rule:
 
-- every OFF→ON transition (the new masked window's first
-  `identity-shuffle`);
-- every chameleon fire (per §6.10's two-message protocol, the
-  follow-up broadcast `identity-shuffle` carries a new `shuffleId`); and
-- every new member joining a session that is already ON. The Durable
-  Object emits a **scoped** `identity-shuffle` to the just-joined
-  socket immediately after its `hello` handshake (§7's WebSocket
-  authentication subsection), reusing the **current** `shuffleId`
-  rather than minting a new one — the joiner needs the existing
-  mapping; the other members already have it. This avoids the gap
-  where a late joiner would otherwise see `tts-utterance` events
-  with no `(maskedName, maskedColor, ttsVoiceId)` reference to
-  resolve them against.
+- **Mints a new `shuffleId`** (the triplet table itself changes):
+  - every OFF→ON transition (the new masked window's first
+    `identity-shuffle`); and
+  - every chameleon fire (per §6.10's two-message protocol, the
+    follow-up broadcast `identity-shuffle` carries the newly-minted
+    `shuffleId`).
+- **Reuses the current `shuffleId`** (the triplet table does not
+  change, only the recipient set does):
+  - every new member joining a session that is already ON. The
+    Durable Object emits a **scoped** `identity-shuffle` to the
+    just-joined socket immediately after its `hello` handshake (§7's
+    WebSocket authentication subsection), reusing the **current**
+    `shuffleId` rather than minting a new one — the joiner needs the
+    existing mapping; the other members already have it, and the
+    underlying triplet table is unchanged. This avoids the gap where
+    a late joiner would otherwise see `tts-utterance` events with no
+    `(maskedName, maskedColor, ttsVoiceId)` reference to resolve
+    them against.
 
 `shuffleId` is **not** reused across transitions, so clients can use
 it for idempotency (drop or merge an `identity-shuffle` they already
@@ -299,8 +305,16 @@ Multiple charges may be in flight at the same time. Simultaneity is
 bounded by the GM's button-press cadence — the protocol does not
 deduplicate or serialize grants, and there is no system-level "only
 one grant active" limit. Two activations that resolve in the same
-broadcast tick are applied as one batched re-shuffle so the
-cross-member uniqueness rule (§6.9) is preserved.
+broadcast tick are applied as **one** batched re-shuffle — the
+Durable Object recomputes the affected triplets atomically and emits
+a **single** `identity-shuffle` with **one** newly-minted
+`shuffleId` covering all the changed rows in that tick. Each
+co-firing grantee still receives its own scoped `chameleon-fired`
+event (§6.10) so per-grant disposition replies remain accurate, but
+the public broadcast carries one shuffleId, not multiple. This keeps
+client-side dedupe/order handling keyed on `shuffleId` consistent
+with the §3 minting rule and preserves the cross-member uniqueness
+rule (§6.9).
 
 *Rationale*: bounding simultaneity at the UI cadence (rather than
 via protocol locking) keeps the implementation simple and lets the
@@ -368,12 +382,22 @@ flow over the **WebSocket** that each client opens to the Durable
 Object (a Cloudflare Workers + Durable Objects standard). The direct
 peer-to-peer **WebRTC audio media tracks** (carried over each member
 pair's `RTCPeerConnection`, *not* over `RTCDataChannel`) carry the
-live-voice path between **unmasked** members — that is, every member
-when anonymous mode is **off**, and just the exempt GM (per §5) when
-anonymous mode is on under a GM-exempt session. The Durable Object
-only relays signaling (offer / answer / ICE) for those tracks. None
-of the ServerMessage / ClientMessage shapes below ride that
-peer-to-peer audio path or `RTCDataChannel`.
+live-voice path from **unmasked senders**:
+
+- when anonymous mode is **off**, every member is an unmasked
+  sender and an unmasked listener, so every pair exchanges live
+  audio symmetrically;
+- when anonymous mode is **on** under a **GM-exempt** session
+  (§5), the only unmasked sender is the exempt GM, but every
+  masked member still listens on a live track from the GM — so
+  the GM publishes audio one-way over `RTCPeerConnection` media
+  tracks to each masked member, while the reverse direction
+  (masked-member-to-GM speech) goes through the STT→TTS path
+  documented in §4.
+
+The Durable Object only relays signaling (offer / answer / ICE) for
+those tracks. None of the ServerMessage / ClientMessage shapes
+below ride that peer-to-peer audio path or `RTCDataChannel`.
 
 ### WebSocket authentication
 
@@ -396,6 +420,36 @@ Admin-only ClientMessages (`request-mode-toggle`, `grant-chameleon`)
 are rejected with a `4403`-style close when sent from a connection
 that did not authenticate as the GM. See the `hello` shape in the
 ClientMessage block below.
+
+### Server-side validation rules
+
+Each ClientMessage variant carries an authorization rule that the
+Durable Object enforces before mutating state or echoing to peers.
+A ClientMessage that fails its rule is dropped silently for low-risk
+spoof attempts and surfaces as a `4403` close for explicit-admin
+spoofs:
+
+- `hello` — always accepted as the first frame; if a `gmToken` is
+  present but does not match the room's `gmToken`, the socket is
+  closed with a `4401`.
+- `request-mode-toggle` — accepted only on a connection that
+  successfully authenticated as the GM via `hello.gmToken`. Otherwise
+  closed with `4403`.
+- `grant-chameleon` — same as `request-mode-toggle` (GM-only).
+- `tts-utterance` — accepted only when (a)
+  `RoomState.anonymousMode.active === true` **and** (b) the sender's
+  `memberId` appears in the current `currentShuffle.perMember` map
+  (i.e., the sender is currently masked). Senders who are exempt
+  (the GM under §5 GM-exempt) or who are connecting under
+  anonymous-mode-off are silently dropped — their live voice goes
+  over the WebRTC audio path instead.
+- `fire-opt-in-chameleon` — accepted only when (a) the referenced
+  `grantId` exists in `RoomState.anonymousMode.chameleons`, (b) that
+  grant's `mode === 'opt-in'`, (c) `consumedAt` is still undefined,
+  and (d) the grant's `toMember` matches the sender's `memberId`.
+  Mismatches and replays are silently dropped (no close code) so the
+  protocol does not leak grant existence to non-grantees who might
+  guess a `grantId`.
 
 Most WebSocket messages emitted by the Durable Object are broadcast
 to every connected member; a small set is **scoped** to specific
