@@ -140,10 +140,14 @@ the triplet table actually changes**:
   never opens. **Exception**: when the GM joins (or re-joins)
   while `gmExempt` is `true`, the Durable Object does **not**
   insert the GM into `currentShuffle.perMember` — §5 requires the
-  exempt GM to stay unmasked. A fresh `shuffleId` is still minted
-  and broadcast (the recipient set may have changed; the table is
-  otherwise unchanged), and the GM's own `welcome` carries the new
-  `shuffleId` so the client correlation rule below still holds.
+  exempt GM to stay unmasked. Because the triplet table is
+  unchanged on this path, the minting rule "fresh `shuffleId`
+  whenever the table actually changes" yields **no** new
+  `shuffleId` and **no** broadcast `identity-shuffle`; the
+  exempt GM's `welcome` simply carries the current
+  `currentShuffle.shuffleId` (or omits it when anonymous mode is
+  OFF), and no other connected member sees any protocol event
+  for the GM-exempt join.
 
 `shuffleId` is **not** reused across transitions, so clients can use
 it for idempotency (drop or merge an `identity-shuffle` they already
@@ -344,7 +348,7 @@ the gameplay they want.
 Every triplet the Durable Object writes into
 `currentShuffle.perMember` must be **globally unique** within the
 map — no two members share the same `maskedName`, the same
-`maskedColor`, or the same `ttsVoiceId` at any moment while the
+`maskedColor`, or the same audible voice at any moment while the
 shuffle is in effect. The rule applies on every shuffle-generating
 path equally:
 
@@ -354,12 +358,27 @@ path equally:
   to §3's "triplet stable in ON window" rule); and
 - batched simultaneous chameleon fires (§6.8).
 
+The voice axis is checked on the **audible voice** rather than on
+the raw `ttsVoiceId` so the §6.6 voice-pool exhaustion fallback
+can satisfy uniqueness in small catalogs. Concretely: two rows
+collide on voice iff they share the **same** `ttsVoiceId` **and**
+the **same** `voiceAdjust` (with `voiceAdjust` absent treated as
+equal only to other absent `voiceAdjust` entries). When the voice
+catalog runs out of fresh `ttsVoiceId`s, the Durable Object reuses
+an existing `ttsVoiceId` together with a fresh `voiceAdjust` so
+the audible voice still differs and the uniqueness invariant
+holds. Two rows that share both `ttsVoiceId` and `voiceAdjust`
+remain a collision and are rejected.
+
 *Rationale*: the masquerade depends on distinct identities. If any
-of these paths produced a colliding identity, two members would
-become visually or audibly indistinguishable, which breaks the
+of these paths produced an audibly or visually colliding identity,
+two members would become indistinguishable, which breaks the
 in-game vocabulary ("the green mask said X"). Anchoring the rule
-once here, on all paths, removes the gap where only the chameleon
-path was uniqueness-checked while the others happened to collide.
+once here, on all paths and with the audible-voice extension,
+removes the gap where only the chameleon path was
+uniqueness-checked while the others happened to collide, and the
+gap where §6.9's voice rule would reject the §6.6 fallback that
+small catalogs unavoidably need.
 
 ### 6.10 Lifecycle
 
@@ -449,14 +468,19 @@ the carried token against the recorded `gmToken` and either:
   receives it as part of the same broadcast), so the snapshot the
   client renders is `welcome + identity-shuffle`, not `welcome`
   alone. When the join itself causes a fresh `shuffleId` to be
-  minted (per §3's join rule), the Durable Object **mints the new
-  `shuffleId` first**, populates `welcome.anonymousMode.shuffleId`
-  with that value, and then broadcasts the matching
-  `identity-shuffle`; the value the joiner sees in `welcome`
-  always equals the `shuffleId` of the next `identity-shuffle` it
-  receives, regardless of whether that shuffle is a join-driven
-  mint or an unrelated chameleon fire that landed between
-  `welcome` and the post-`hello` `identity-shuffle`; or
+  minted (per §3's join rule, i.e., the joiner is not the exempt
+  GM of §5), the Durable Object **mints the new `shuffleId`
+  first**, populates `welcome.anonymousMode.shuffleId` with that
+  value, and then broadcasts the matching `identity-shuffle`.
+  `welcome.anonymousMode.shuffleId` therefore reflects the
+  Durable Object's state at `hello` time; it is the *baseline*
+  the client renders the room with. The client treats every
+  subsequent `identity-shuffle` it receives as authoritative and
+  replaces its local `currentShuffle.perMember` accordingly,
+  regardless of whether that shuffle's `shuffleId` equals the
+  welcome's value (the join-driven shuffle) or is newer (an
+  unrelated chameleon fire that landed between `welcome` and the
+  post-`hello` shuffle); or
 - accepts the connection as a regular member when `gmToken` is
   omitted or empty (and leaves `RoomState.gmMemberId` unchanged),
   then replies with the same `welcome` ServerMessage and the same
@@ -633,7 +657,7 @@ single-fire cases.
 |---|---|
 | `welcome` | **scoped**: the just-`hello`-authenticated socket only — never broadcast |
 | `mode-transition-scheduled` | broadcast to every connected member |
-| `identity-shuffle` | broadcast to every connected member (including for the post-`hello` newcomer event during an active ON window, since the triplet table now contains the joiner's row — see §3 *`shuffleId` semantics*) |
+| `identity-shuffle` | broadcast to every connected member (including for the post-`hello` newcomer event during an active ON window when the joiner's row is added to the triplet table — see §3 *`shuffleId` semantics*; an exempt GM join under §5 adds **no** row, so the Durable Object emits **no** `identity-shuffle` for that join at all) |
 | `tts-utterance` | broadcast to every connected member |
 | `chameleon-granted` | **scoped**: GM + the grantee only |
 | `chameleon-fired` | **scoped**: GM + the grantee only (non-grantees receive a fresh `identity-shuffle` instead — see §6.10) |
@@ -665,7 +689,7 @@ state:
 interface RoomState {
   roomId: string;
   gmToken: string; // never sent to non-GM peers
-  gmMemberId?: string /* memberId of the connected GM, set after a successful `hello` with matching `gmToken`; cleared when the GM disconnects */;
+  gmMemberId?: string /* memberId of the connected GM, set after a successful `hello` with matching `gmToken`; cleared on disconnect **only when** the disconnecting socket's `memberId` still equals `gmMemberId` (§7 reconnect-race guard) */;
   members: Map<string /* memberId */, {
     nickname: string; // real
     color: string;    // real
