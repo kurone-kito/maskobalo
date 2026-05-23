@@ -120,17 +120,25 @@ the triplet table actually changes**:
 - every chameleon fire (per §6.10's two-message protocol, the
   follow-up `identity-shuffle` carries the newly-minted `shuffleId`);
   and
-- every new member joining a session that is already ON. The Durable
-  Object inserts the joiner's row into `currentShuffle.perMember`
-  (this is what makes the joiner eligible to speak under §7's
-  `tts-utterance` validation rule), mints a fresh `shuffleId`, and
-  emits a **broadcast** `identity-shuffle` so every connected
-  member's `currentShuffle.perMember` map is updated to include the
-  newcomer. The joiner receives the same broadcast as everyone else
-  immediately after its `hello` handshake completes (§7's WebSocket
-  authentication subsection), so the gap where a late joiner would
-  otherwise see `tts-utterance` events without a corresponding
-  `(maskedName, maskedColor, ttsVoiceId)` mapping never opens.
+- every new member joining a session that is already ON. The
+  Durable Object inserts the joiner's row into
+  `currentShuffle.perMember` (this is what makes the joiner
+  eligible to speak under §7's `tts-utterance` validation rule),
+  mints a fresh `shuffleId`, and emits a **broadcast**
+  `identity-shuffle` so every connected member's
+  `currentShuffle.perMember` map is updated to include the
+  newcomer. The joiner receives the same broadcast as everyone
+  else immediately after its `hello` handshake completes (§7's
+  WebSocket authentication subsection), so the gap where a late
+  joiner would otherwise see `tts-utterance` events without a
+  corresponding `(maskedName, maskedColor, ttsVoiceId)` mapping
+  never opens. **Exception**: when the GM joins (or re-joins)
+  while `gmExempt` is `true`, the Durable Object does **not**
+  insert the GM into `currentShuffle.perMember` — §5 requires the
+  exempt GM to stay unmasked. A fresh `shuffleId` is still minted
+  and broadcast (the recipient set may have changed; the table is
+  otherwise unchanged), and the GM's own `welcome` carries the new
+  `shuffleId` so the client correlation rule below still holds.
 
 `shuffleId` is **not** reused across transitions, so clients can use
 it for idempotency (drop or merge an `identity-shuffle` they already
@@ -328,15 +336,25 @@ the gameplay they want.
 
 ### 6.9 Uniqueness rule
 
-The new triplet must avoid colliding with any other member's
-currently active triplet at fire time. This is the documented
-exception to §3's "triplet stable in ON window" rule — chameleon is
-the only mid-window shuffler.
+Every triplet the Durable Object writes into
+`currentShuffle.perMember` must be **globally unique** within the
+map — no two members share the same `maskedName`, the same
+`maskedColor`, or the same `ttsVoiceId` at any moment while the
+shuffle is in effect. The rule applies on every shuffle-generating
+path equally:
 
-*Rationale*: the masquerade depends on distinct identities. If
-chameleon could produce a colliding identity, two members would be
-visually indistinguishable, which breaks the in-game vocabulary
-("the green mask said X").
+- OFF→ON transitions (initial shuffle);
+- ON-window member joins (insertion of the joiner's row);
+- chameleon fires (mid-window row update, the documented exception
+  to §3's "triplet stable in ON window" rule); and
+- batched simultaneous chameleon fires (§6.8).
+
+*Rationale*: the masquerade depends on distinct identities. If any
+of these paths produced a colliding identity, two members would
+become visually or audibly indistinguishable, which breaks the
+in-game vocabulary ("the green mask said X"). Anchoring the rule
+once here, on all paths, removes the gap where only the chameleon
+path was uniqueness-checked while the others happened to collide.
 
 ### 6.10 Lifecycle
 
@@ -425,7 +443,15 @@ the carried token against the recorded `gmToken` and either:
   `(maskedName, maskedColor, ttsVoiceId)` mapping (the joiner
   receives it as part of the same broadcast), so the snapshot the
   client renders is `welcome + identity-shuffle`, not `welcome`
-  alone; or
+  alone. When the join itself causes a fresh `shuffleId` to be
+  minted (per §3's join rule), the Durable Object **mints the new
+  `shuffleId` first**, populates `welcome.anonymousMode.shuffleId`
+  with that value, and then broadcasts the matching
+  `identity-shuffle`; the value the joiner sees in `welcome`
+  always equals the `shuffleId` of the next `identity-shuffle` it
+  receives, regardless of whether that shuffle is a join-driven
+  mint or an unrelated chameleon fire that landed between
+  `welcome` and the post-`hello` `identity-shuffle`; or
 - accepts the connection as a regular member when `gmToken` is
   omitted or empty (and leaves `RoomState.gmMemberId` unchanged),
   then replies with the same `welcome` ServerMessage and the same
@@ -471,21 +497,37 @@ spoofs:
   any active `transition`).
 - `request-mode-toggle` — accepted only when the sender's
   `memberId === RoomState.gmMemberId`. Otherwise closed with
-  `4403`. Additionally, if `RoomState.anonymousMode.transition` is
-  already set (i.e., a countdown is in flight), the request is
-  **silently ignored** rather than queued or replacing the pending
-  transition; the GM must wait for the current transition to land
-  before scheduling the next one. This keeps countdown rendering
-  on all clients deterministic and removes the rapid-double-click /
-  network-replay race.
+  `4403`. Additionally:
+  - if `RoomState.anonymousMode.transition` is already set (i.e.,
+    a countdown is in flight), the request is **silently ignored**
+    rather than queued or replacing the pending transition; the
+    GM must wait for the current transition to land before
+    scheduling the next one. This keeps countdown rendering on
+    all clients deterministic and removes the rapid-double-click /
+    network-replay race;
+  - if the message's `targetMode` already matches
+    `RoomState.anonymousMode.active` (i.e., asking to turn ON
+    while already ON, or OFF while already OFF), the request is
+    **silently ignored** as a no-op. Accepting it would create an
+    ambiguous same-mode "transition" that conflicts with §3's
+    rule that mid-window identity changes happen only via
+    chameleon.
 - `grant-chameleon` — accepted only when (a) the sender's
   `memberId === RoomState.gmMemberId`, (b)
-  `RoomState.anonymousMode.active === true`, **and** (c) the
-  message's `toMember !== RoomState.gmMemberId` (the no-self-grant
-  rule from §6.5; a self-targeted grant is rejected with `4403`).
-  Grants attempted while anonymous mode is OFF are also closed
-  with `4403`; they would otherwise create stale "pre-loaded"
-  grants that violate §6's ON-window-only lifecycle.
+  `RoomState.anonymousMode.active === true`, (c) the message's
+  `toMember !== RoomState.gmMemberId` (the no-self-grant rule
+  from §6.5; a self-targeted grant is rejected with `4403`),
+  **and** (d) the message's `toMember` exists in
+  `RoomState.members` **and** is present in the current
+  `currentShuffle.perMember` map (i.e., the target is a
+  currently-connected member who is currently masked). A
+  `toMember` that does not satisfy (d) — disconnected member,
+  exempt GM, or fabricated `memberId` — is rejected with `4403`
+  so the protocol never persists an orphaned grant whose fire
+  behavior would be undefined. Grants attempted while anonymous
+  mode is OFF are also closed with `4403`; they would otherwise
+  create stale "pre-loaded" grants that violate §6's
+  ON-window-only lifecycle.
 - `tts-utterance` — accepted only when (a)
   `RoomState.anonymousMode.active === true` **and** (b) the sender's
   `memberId` appears in the current `currentShuffle.perMember` map
