@@ -17,6 +17,8 @@
 と [`kurone-kito/idd-skill`](https://github.com/kurone-kito/idd-skill)
 から bootstrap したばかりで、アプリ実装は後続の issue で進めます。
 
+中核機能「**匿名モード**」のデザイン詳細: [`docs/anonymous-mode.md`](docs/anonymous-mode.md)
+
 ## 技術スタック
 
 | レイヤ | 採用 |

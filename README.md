@@ -17,6 +17,8 @@ parties. Anyone with the room URL can join — no account required.
 and [`kurone-kito/idd-skill`](https://github.com/kurone-kito/idd-skill);
 application code lands in subsequent issues.
 
+Design of the killer **anonymous mode** feature: [`docs/anonymous-mode.md`](docs/anonymous-mode.md).
+
 ## Stack
 
 | Layer | Choice |
