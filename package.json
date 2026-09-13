@@ -27,6 +27,7 @@
     "lint:check:biome": "biome check",
     "lint:check:cspell": "cspell lint --no-progress --show-suggestions .",
     "lint:check:markdown": "markdownlint-cli2 \"**/*.md\"",
+    "lint:check:okf": "node scripts/okf-validate.mjs",
     "lint:fix": "pnpm run --stream \"/(lint:fix:.+|lint:check:cspell)/\"",
     "lint:fix:biome": "biome check --write",
     "lint:fix:markdown": "markdownlint-cli2 --fix \"**/*.md\"",

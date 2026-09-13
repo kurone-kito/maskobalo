@@ -78,3 +78,26 @@ The following are deliberately **outside** `docs/knowledge/`:
 
 `okf-types.json` is the single source of truth for allowed `type`
 values.
+
+## Enforcement
+
+`scripts/okf-validate.mjs` (wired into `pnpm run lint` as
+`lint:check:okf`) checks, for every non-reserved document:
+
+1. an opening and closing `---` frontmatter fence is present;
+2. the frontmatter parses under a minimal subset (top-level
+   `key:` lines, list items starting with a dash and a space,
+   2-space-indented continuations, and blank lines only);
+3. `type` is present and non-empty;
+4. `type`'s value is a key in `okf-types.json`;
+5. the document is linked from at least one `index.md` in the
+   bundle.
+
+The bundle-root `index.md` is additionally checked for a declared
+`okf_version`.
+
+Deliberate limitation: the script implements only this minimal
+frontmatter subset, not a general YAML parser, to stay
+dependency-free. A document using YAML features outside the subset
+(flow collections, multi-line scalars, anchors, etc.) is rejected even
+if it would be valid YAML.
