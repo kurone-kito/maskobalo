@@ -1,0 +1,7 @@
+{
+  "design": "A specification for a feature or subsystem.",
+  "convention": "A repository rule or format contract.",
+  "strategy": "A tooling or process direction.",
+  "reference": "A lookup table, glossary, or index of facts.",
+  "runbook": "An operational procedure."
+}
