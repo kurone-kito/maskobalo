@@ -35,12 +35,13 @@ Tags are lowercase kebab-case, 2-5 per document.
 
 ## Reserved files
 
-- `index.md` - no frontmatter other than `okf_version: "0.2"`. Body
-  uses OKF's index shape: section headings followed by
-  `* [Title](path) - description` entries.
-- `log.md` - flat, date-grouped, newest-first, ISO `YYYY-MM-DD`
-  headings; entries start with the OKF bold convention (`**Creation**`,
-  `**Update**`, `**Deprecation**`).
+- `index.md` and `log.md` - no frontmatter other than
+  `okf_version: "0.2"`.
+  - `index.md`'s body uses OKF's index shape: section headings
+    followed by `* [Title](path) - description` entries.
+  - `log.md`'s body is flat, date-grouped, newest-first, ISO
+    `YYYY-MM-DD` headings; entries start with the OKF bold convention
+    (`**Creation**`, `**Update**`, `**Deprecation**`).
 
 ## Repository-local rule: index coverage
 
@@ -67,8 +68,11 @@ The following are deliberately **outside** `docs/knowledge/`:
   policy forbids unapproved edits to these community documents.
 - Repository root files - `README.md`, `README.ja.md`, `SECURITY.md`,
   `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` - stay where GitHub and agent
-  runtimes expect them to be found, and link into this bundle instead
-  of joining it.
+  runtimes expect them to be found rather than joining the bundle.
+  This issue does not add links from them into `docs/knowledge/`
+  (out of scope here - it touches only this bundle and
+  `.cspell.config.yml`); wiring those entry-point links is follow-up
+  work for whichever issue next touches each file.
 
 ## Type vocabulary
 
