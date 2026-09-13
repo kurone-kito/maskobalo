@@ -8,7 +8,7 @@
 // YAML parser. That trade-off keeps this dependency-free.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { extname, join, relative } from 'node:path';
+import { basename, extname, join, relative } from 'node:path';
 
 const ROOT = process.argv[2] ?? 'docs/knowledge';
 const RESERVED_NAMES = new Set(['index.md', 'log.md']);
@@ -97,13 +97,14 @@ function collectLinkedPaths(allFiles) {
   /** @type {Set<string>} */
   const linked = new Set();
   for (const file of allFiles) {
-    if (file.split('/').pop() !== 'index.md') continue;
+    if (basename(file) !== 'index.md') continue;
     const text = readFileSync(file, 'utf8');
     const dir = join(file, '..');
     for (const match of text.matchAll(MARKDOWN_LINK)) {
       const href = match[1];
       if (href === undefined || /^[a-z]+:\/\//.test(href)) continue;
-      linked.add(join(dir, href));
+      const path = href.split(/[?#]/)[0];
+      if (path) linked.add(join(dir, path));
     }
   }
   return linked;
@@ -126,7 +127,7 @@ function main() {
 
   for (const file of allFiles) {
     const relPath = relative('.', file);
-    const isReserved = RESERVED_NAMES.has(file.split('/').pop() ?? '');
+    const isReserved = RESERVED_NAMES.has(basename(file));
     const text = readFileSync(file, 'utf8');
     const frontmatter = extractFrontmatterLines(text);
 
