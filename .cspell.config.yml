@@ -25,3 +25,5 @@ words:
   - waivable
   # Filesystem flag referenced in IDD scaffold (Linux esync)
   - Esync
+  # Open Knowledge Format (docs/knowledge/ bundle)
+  - okf
